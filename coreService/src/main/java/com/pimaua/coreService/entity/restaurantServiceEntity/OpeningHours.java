@@ -2,10 +2,7 @@ package com.pimaua.coreService.entity.restaurantServiceEntity;
 
 import com.pimaua.coreService.entity.enums.DayOfWeek;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalTime;
 
@@ -14,6 +11,7 @@ import java.time.LocalTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "opening_hours")
 public class OpeningHours {
     @Id
@@ -26,7 +24,7 @@ public class OpeningHours {
     private LocalTime opensAt;
     @Column(name = "closes_at", nullable = false)
     private LocalTime closesAt;
-    @Column(name = "is24Hours")
+    @Column(name = "is_24_hours")
     private Boolean is24Hours;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")

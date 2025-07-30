@@ -1,0 +1,70 @@
+CREATE TABLE IF NOT EXISTS customers(
+id INT AUTO_INCREMENT PRIMARY KEY,
+user_id INT NOT NULL,
+name VARCHAR(50) NOT NULL,
+phone_number VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS restaurants(
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(50) NOT NULL,
+description VARCHAR(255),
+address VARCHAR(50) NOT NULL,
+is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS menu(
+id INT AUTO_INCREMENT PRIMARY KEY,
+restaurant_id INT NOT NULL,
+name VARCHAR(100) NOT NULL,
+is_active BOOLEAN DEFAULT TRUE,
+FOREIGN KEY (restaurant_id) REFERENCES restaurants(id)
+);
+
+CREATE TABLE IF NOT EXISTS menu_item(
+id INT AUTO_INCREMENT PRIMARY KEY,
+menu_id INT NOT NULL,
+name VARCHAR(100) NOT NULL,
+description VARCHAR(255),
+price DECIMAL(10,2) NOT NULL,
+is_available BOOLEAN DEFAULT TRUE,
+FOREIGN KEY (menu_id) REFERENCES menu(id)
+);
+
+CREATE TABLE IF NOT EXISTS opening_hours(
+id INT AUTO_INCREMENT PRIMARY KEY,
+restaurant_id INT NOT NULL,
+day_of_week VARCHAR(9) NOT NULL,
+opens_at TIME NOT NULL,
+closes_at TIME NOT NULL,
+is_24_hours BOOLEAN DEFAULT FALSE,
+FOREIGN KEY (restaurant_id) REFERENCES restaurants(id),
+UNIQUE (restaurant_id, day_of_week)
+);
+
+CREATE TABLE IF NOT EXISTS orders(
+id INT AUTO_INCREMENT PRIMARY KEY,
+user_id INT NOT NULL,
+restaurant_id INT NOT NULL,
+status VARCHAR(50) NOT NULL,
+total_price DECIMAL(10,2) NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+pickup_address VARCHAR(255) NOT NULL,
+pickup_latitude DECIMAL(9,6) NOT NULL,
+pickup_longitude DECIMAL(9,6) NOT NULL,
+dropoff_address VARCHAR(255) NOT NULL,
+dropoff_latitude DECIMAL(9,6) NOT NULL,
+dropoff_longitude DECIMAL(9,6) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS order_items(
+id INT AUTO_INCREMENT PRIMARY KEY,
+order_id INT NOT NULL,
+menu_item_id INT NOT NULL,
+name VARCHAR(100) NOT NULL,
+quantity INT NOT NULL,
+unit_price DECIMAL(10,2) NOT NULL,
+total_price DECIMAL(10,2) NOT NULL,
+FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+

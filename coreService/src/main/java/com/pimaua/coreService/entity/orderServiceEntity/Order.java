@@ -2,10 +2,7 @@ package com.pimaua.coreService.entity.orderServiceEntity;
 
 import com.pimaua.coreService.entity.enums.OrderStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,16 +13,19 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "orders")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(nullable = false)
     private Integer userId;
+    @Column(nullable = false)
     private Integer restaurantId;
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status;
+    @Column(name = "status", nullable = false)
+    private OrderStatus orderStatus;
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
     @Column(name = "created_at", nullable = false)

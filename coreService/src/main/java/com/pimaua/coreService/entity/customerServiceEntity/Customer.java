@@ -1,4 +1,4 @@
-package com.pimaua.coreService.entity.userServiceEntity;
+package com.pimaua.coreService.entity.customerServiceEntity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,9 @@ import lombok.Setter;
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
+    @Column(name = "user_id")
+    private Integer userId;
     private String name;
     @Column(name="phone_number")
     private String phoneNumber;
