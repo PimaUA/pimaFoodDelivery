@@ -3,6 +3,7 @@ package com.pimaua.coreService.entity.restaurantServiceEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,12 +27,6 @@ public class Restaurant {
     private List<Menu>menus=new ArrayList<>();
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OpeningHours>openingHoursList=new ArrayList<>();
-
-    @Builder
-    public Restaurant(String name, String description, String address, boolean isActive) {
-        this.name = name;
-        this.description = description;
-        this.address = address;
-        this.isActive = isActive;
-    }
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

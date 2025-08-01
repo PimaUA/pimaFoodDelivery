@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,4 +23,6 @@ public class Customer {
     private String name;
     @Column(name="phone_number")
     private String phoneNumber;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

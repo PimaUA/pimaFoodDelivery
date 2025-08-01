@@ -1,4 +1,4 @@
-package com.pimaua.coreService.test.utils;
+package com.pimaua.authService.test.utils;
 
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;

@@ -3,6 +3,8 @@ package com.pimaua.coreService.entity.orderServiceEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -27,4 +29,6 @@ public class OrderItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="order_id", nullable = false)
     private Order order;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

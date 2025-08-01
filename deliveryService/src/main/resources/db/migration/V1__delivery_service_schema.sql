@@ -1,0 +1,31 @@
+CREATE TABLE IF NOT EXISTS drivers(
+id INT AUTO_INCREMENT PRIMARY KEY,
+user_id INT NOT NULL,
+name VARCHAR(50),
+driver_status VARCHAR(50),
+vehicle_type VARCHAR(50),
+driver_location VARCHAR(50),
+is_available BOOLEAN DEFAULT FALSE,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS delivery(
+id INT AUTO_INCREMENT PRIMARY KEY,
+order_id INT NOT NULL,
+delivery_status VARCHAR(50) NOT NULL,
+driver_id INT NOT NULL,
+pickup_time TIMESTAMP,
+dropoff_time TIMESTAMP,
+estimated_time TIME,
+FOREIGN KEY (driver_id) REFERENCES drivers(id),
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS live_driver_locations(
+driver_id INT,
+latitude DECIMAL(9,6) NOT NULL,
+longitude DECIMAL(9,6) NOT NULL,
+timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+PRIMARY KEY(driver_id, timestamp),
+FOREIGN KEY (driver_id) REFERENCES drivers(id)
+);

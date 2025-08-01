@@ -3,6 +3,8 @@ package com.pimaua.coreService.entity.restaurantServiceEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -21,6 +23,8 @@ public class MenuItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id")
     private Menu menu;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     }
 
 

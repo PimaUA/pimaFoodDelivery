@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: 8090
 spring:
   application:
-    name: "coreservice"
+    name: "deliveryservice"
 
   datasource:
-    url: jdbc:mysql://localhost:3306/coreservicedb
+    url: jdbc:mysql://localhost:3308/deliveryservicedb
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,4 +20,3 @@ spring:
     validate-on-migrate: true
     baseline-on-migrate: true
     connect-retries: 5
-

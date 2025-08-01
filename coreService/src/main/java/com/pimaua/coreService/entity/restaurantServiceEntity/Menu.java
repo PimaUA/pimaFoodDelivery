@@ -3,6 +3,7 @@ package com.pimaua.coreService.entity.restaurantServiceEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -23,4 +24,6 @@ public class Menu {
     private Restaurant restaurant;
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MenuItem> menuItems;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

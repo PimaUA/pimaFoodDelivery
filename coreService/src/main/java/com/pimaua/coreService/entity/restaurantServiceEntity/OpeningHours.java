@@ -4,6 +4,7 @@ import com.pimaua.coreService.entity.enums.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -29,4 +30,6 @@ public class OpeningHours {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
