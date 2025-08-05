@@ -4,6 +4,7 @@ import com.pimaua.core.entity.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +34,15 @@ public class Order {
     @Column(name = "pickup_address", nullable = false)
     private String pickupAddress;
     @Column(name = "pickup_latitude", nullable = false)
-    private Double pickupLatitude;
+    private BigDecimal pickupLatitude;
     @Column(name = "pickup_longitude", nullable = false)
-    private Double pickupLongitude;
+    private BigDecimal pickupLongitude;
     @Column(name = "dropoff_address", nullable = false)
     private String dropOffAddress;
     @Column(name = "dropoff_latitude", nullable = false)
-    private Double dropOffLatitude;
+    private BigDecimal dropOffLatitude;
     @Column(name = "dropoff_longitude", nullable = false)
-    private Double dropOffLongitude;
+    private BigDecimal dropOffLongitude;
     @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
     @Column(name = "updated_at")

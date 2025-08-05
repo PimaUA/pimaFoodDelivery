@@ -10,6 +10,7 @@ import com.pimaua.core.test.utils.BaseRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -48,11 +49,11 @@ public class OrderRepositoryTest extends BaseRepositoryTest {
                 .totalPrice(25.0)
                 .createdAt(LocalDateTime.of(2025, 7, 30, 12, 0))
                 .pickupAddress("Some street")
-                .pickupLatitude(40.1234)
-                .pickupLongitude(40.1234)
+                .pickupLatitude(BigDecimal.valueOf(40.1234))
+                .pickupLongitude(BigDecimal.valueOf(40.1234))
                 .dropOffAddress("Another street")
-                .dropOffLatitude(50.1234)
-                .dropOffLongitude(50.1234)
+                .dropOffLatitude(BigDecimal.valueOf(50.1234))
+                .dropOffLongitude(BigDecimal.valueOf(50.1234))
                 .build();
         orderRepository.save(order);
 
