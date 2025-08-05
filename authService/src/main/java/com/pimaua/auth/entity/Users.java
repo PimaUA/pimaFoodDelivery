@@ -28,6 +28,8 @@ public class Users {
     private Boolean isActive;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     @ManyToMany
     @JoinTable(
             name = "user_roles",
