@@ -3,6 +3,7 @@ package com.pimaua.core.entity.order;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,9 +24,9 @@ public class OrderItem {
     @Column(name = "quantity",nullable = false)
     private Integer quantity;
     @Column(name = "unit_price",nullable = false)
-    private Double unitPrice;
+    private BigDecimal unitPrice;
     @Column(name = "total_price",nullable = false)
-    private Double totalPrice;
+    private BigDecimal totalPrice;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="order_id", nullable = false)
     private Order order;

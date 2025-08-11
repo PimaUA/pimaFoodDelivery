@@ -18,10 +18,11 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Integer userId;
+    @Column(nullable = false)
     private String name;
-    @Column(name="phone_number")
+    @Column(name="phone_number", nullable = false)
     private String phoneNumber;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

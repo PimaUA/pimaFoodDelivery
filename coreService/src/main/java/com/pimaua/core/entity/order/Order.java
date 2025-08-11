@@ -28,7 +28,7 @@ public class Order {
     @Column(name = "status", nullable = false)
     private OrderStatus orderStatus;
     @Column(name = "total_price", nullable = false)
-    private Double totalPrice;
+    private BigDecimal totalPrice;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "pickup_address", nullable = false)

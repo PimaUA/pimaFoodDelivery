@@ -21,12 +21,13 @@ public class OpeningHours {
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week", nullable = false)
     private DayOfWeek dayOfWeek;
-    @Column(name = "opens_at", nullable = false)
+    @Column(name = "opens_at")
     private LocalTime opensAt;
-    @Column(name = "closes_at", nullable = false)
+    @Column(name = "closes_at")
     private LocalTime closesAt;
-    @Column(name = "is_24_hours")
-    private Boolean is24Hours;
+    @Column(name = "is_24_hours",columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Builder.Default
+    private Boolean is24Hours=false;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;

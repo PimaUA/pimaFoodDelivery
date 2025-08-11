@@ -16,9 +16,11 @@ public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(nullable = false)
     private String name;
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @Column(name = "is_active",columnDefinition = "BOOLEAN DEFAULT true")
+    @Builder.Default
+    private Boolean isActive=true;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;

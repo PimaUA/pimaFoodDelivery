@@ -21,12 +21,13 @@ public class Restaurant {
     private String name;
     private String description;
     private String address;
-    @Column(name="is_active")
-    private Boolean isActive;
+    @Column(name="is_active",columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Builder.Default
+    private Boolean isActive=true;
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Menu>menus=new ArrayList<>();
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OpeningHours>openingHoursList=new ArrayList<>();
+    private List<OpeningHours> openingHours =new ArrayList<>();
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

@@ -5,7 +5,6 @@ import com.pimaua.core.entity.enums.OrderStatus;
 import com.pimaua.core.entity.order.Order;
 import com.pimaua.core.entity.order.OrderItem;
 import com.pimaua.core.entity.restaurant.Menu;
-import com.pimaua.core.entity.restaurant.MenuItem;
 import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.repository.customer.CustomerRepository;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
@@ -76,12 +75,12 @@ public class OrderItemRepositoryTest extends BaseRepositoryTest {
         menu = menuRepository.save(menu);
 
         // Step 5: Create and save a MenuItem linked to the Menu
-        MenuItem menuItem = MenuItem.builder()
+        com.pimaua.core.entity.restaurant.MenuItem menuItem = com.pimaua.core.entity.restaurant.MenuItem.builder()
                 .name("Apple Juice")
                 .price(20.0)
                 .menu(menu)
                 .build();
-        MenuItem savedMenuItem = menuItemRepository.save(menuItem);
+        com.pimaua.core.entity.restaurant.MenuItem savedMenuItem = menuItemRepository.save(menuItem);
 
         // Step 6: Create and save an OrderItem
         OrderItem orderItem = OrderItem.builder()
