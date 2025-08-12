@@ -3,7 +3,7 @@ package com.pimaua.core.service.restaurant;
 import com.pimaua.core.dto.restaurant.MenuItemRequestDto;
 import com.pimaua.core.dto.restaurant.MenuItemResponseDto;
 import com.pimaua.core.entity.restaurant.MenuItem;
-import com.pimaua.core.exception.custom.MenuItemNotFoundException;
+import com.pimaua.core.exception.custom.notfound.MenuItemNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuItemMapper;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import jakarta.transaction.Transactional;

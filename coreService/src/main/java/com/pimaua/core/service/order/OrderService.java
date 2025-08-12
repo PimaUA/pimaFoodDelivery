@@ -4,7 +4,7 @@ import com.pimaua.core.dto.order.OrderCreateDto;
 import com.pimaua.core.dto.order.OrderResponseDto;
 import com.pimaua.core.dto.order.OrderUpdateDto;
 import com.pimaua.core.entity.order.Order;
-import com.pimaua.core.exception.custom.OrderNotFoundException;
+import com.pimaua.core.exception.custom.notfound.OrderNotFoundException;
 import com.pimaua.core.mapper.order.OrderMapper;
 import com.pimaua.core.repository.order.OrderRepository;
 import jakarta.transaction.Transactional;

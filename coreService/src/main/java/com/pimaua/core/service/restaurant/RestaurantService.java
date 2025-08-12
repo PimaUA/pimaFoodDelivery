@@ -4,7 +4,7 @@ package com.pimaua.core.service.restaurant;
 import com.pimaua.core.dto.restaurant.RestaurantRequestDto;
 import com.pimaua.core.dto.restaurant.RestaurantResponseDto;
 import com.pimaua.core.entity.restaurant.Restaurant;
-import com.pimaua.core.exception.custom.RestaurantNotFoundException;
+import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.restaurant.RestaurantMapper;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import jakarta.transaction.Transactional;

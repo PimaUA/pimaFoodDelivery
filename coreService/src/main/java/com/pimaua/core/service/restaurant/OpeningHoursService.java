@@ -3,7 +3,7 @@ package com.pimaua.core.service.restaurant;
 import com.pimaua.core.dto.restaurant.OpeningHoursRequestDto;
 import com.pimaua.core.dto.restaurant.OpeningHoursResponseDto;
 import com.pimaua.core.entity.restaurant.OpeningHours;
-import com.pimaua.core.exception.custom.OpeningHoursNotFoundException;
+import com.pimaua.core.exception.custom.notfound.OpeningHoursNotFoundException;
 import com.pimaua.core.mapper.restaurant.OpeningHoursMapper;
 import com.pimaua.core.repository.restaurant.OpeningHoursRepository;
 import jakarta.transaction.Transactional;

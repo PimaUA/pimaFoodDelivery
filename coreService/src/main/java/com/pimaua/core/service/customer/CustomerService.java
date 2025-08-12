@@ -4,7 +4,7 @@ import com.pimaua.core.dto.customer.CustomerCreateDto;
 import com.pimaua.core.dto.customer.CustomerResponseDto;
 import com.pimaua.core.dto.customer.CustomerUpdateDto;
 import com.pimaua.core.entity.customer.Customer;
-import com.pimaua.core.exception.custom.CustomerNotFoundException;
+import com.pimaua.core.exception.custom.notfound.CustomerNotFoundException;
 import com.pimaua.core.mapper.customer.CustomerMapper;
 import com.pimaua.core.repository.customer.CustomerRepository;
 import jakarta.transaction.Transactional;
