@@ -14,7 +14,7 @@ public class WebClientConfig {
     @Bean("menuItemWebClient")
     public WebClient menuItemWebClient(WebClient.Builder builder) {
         return builder
-                .baseUrl("https://api.taiga.io/api/v1") //???????
+                .baseUrl("http://api/") //??
                 .filter(webClientErrorHandler.filterError())
                 .defaultHeader("Content-Type", "application/json")
                 .build();

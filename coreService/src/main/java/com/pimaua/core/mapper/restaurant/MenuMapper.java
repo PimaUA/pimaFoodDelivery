@@ -1,10 +1,8 @@
 package com.pimaua.core.mapper.restaurant;
 
-import com.pimaua.core.dto.restaurant.MenuItemResponseDto;
 import com.pimaua.core.dto.restaurant.MenuRequestDto;
 import com.pimaua.core.dto.restaurant.MenuResponseDto;
 import com.pimaua.core.entity.restaurant.Menu;
-import com.pimaua.core.entity.restaurant.MenuItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

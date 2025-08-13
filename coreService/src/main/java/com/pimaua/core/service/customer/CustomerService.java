@@ -7,7 +7,7 @@ import com.pimaua.core.entity.customer.Customer;
 import com.pimaua.core.exception.custom.notfound.CustomerNotFoundException;
 import com.pimaua.core.mapper.customer.CustomerMapper;
 import com.pimaua.core.repository.customer.CustomerRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,16 +26,19 @@ public class CustomerService {
         return customerMapper.toResponseDto(customer);
     }
 
+    @Transactional(readOnly = true)
     public List<CustomerResponseDto> findAll() {
         return customerMapper.toListDto(customerRepository.findAll());
     }
 
+    @Transactional(readOnly = true)
     public CustomerResponseDto findById(Integer id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID " + id));
         return customerMapper.toResponseDto(customer);
     }
 
+    @Transactional(readOnly = true)
     public CustomerResponseDto findByName(String name) {
         Customer customer = customerRepository.findByName(name)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with name " + name));
@@ -51,9 +54,8 @@ public class CustomerService {
     }
 
     public void deleteCustomer(Integer id) {
-        if (!customerRepository.existsById(id)) {
-            throw new CustomerNotFoundException("Customer not found with ID: " + id);
-        }
-        customerRepository.deleteById(id);
+        Customer customer=customerRepository.findById(id)
+                .orElseThrow(()->new CustomerNotFoundException("Customer not found with ID " + id));
+        customerRepository.delete(customer);
     }
 }

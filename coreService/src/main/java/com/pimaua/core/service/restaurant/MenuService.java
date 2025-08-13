@@ -6,7 +6,7 @@ import com.pimaua.core.entity.restaurant.Menu;
 import com.pimaua.core.exception.custom.notfound.MenuNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuMapper;
 import com.pimaua.core.repository.restaurant.MenuRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,11 +25,13 @@ public class MenuService {
         return menuMapper.toDto(savedMenu);
     }
 
+    @Transactional(readOnly = true)
     public List<MenuResponseDto> findAll() {
         List<Menu> menus = menuRepository.findAll();
         return menuMapper.toListDto(menus);
     }
 
+    @Transactional(readOnly = true)
     public MenuResponseDto findById(Integer id) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new MenuNotFoundException("Menu not found with ID " + id));
@@ -40,14 +42,13 @@ public class MenuService {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new MenuNotFoundException("Menu not found with ID " + id));
         menuMapper.updateEntity(menu, menuRequestDto);
-        Menu savedMenu=menuRepository.save(menu);
+        Menu savedMenu = menuRepository.save(menu);
         return menuMapper.toDto(savedMenu);
     }
 
     public void delete(Integer id) {
-        if (!menuRepository.existsById(id)) {
-            throw new MenuNotFoundException("Menu not found with ID " + id);
-        }
-        menuRepository.deleteById(id);
+        Menu menu = menuRepository.findById(id)
+                .orElseThrow(() -> new MenuNotFoundException("Menu not found with ID " + id));
+        menuRepository.delete(menu);
     }
 }

@@ -1,13 +1,12 @@
 package com.pimaua.core.service.restaurant;
 
-
 import com.pimaua.core.dto.restaurant.RestaurantRequestDto;
 import com.pimaua.core.dto.restaurant.RestaurantResponseDto;
 import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.restaurant.RestaurantMapper;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +16,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class RestaurantService {
-private final RestaurantRepository restaurantRepository;
-private final RestaurantMapper restaurantMapper;
+    private final RestaurantRepository restaurantRepository;
+    private final RestaurantMapper restaurantMapper;
 
     public RestaurantResponseDto create(RestaurantRequestDto restaurantRequestDto) {
         Restaurant restaurant = restaurantMapper.toEntity(restaurantRequestDto);
@@ -26,11 +25,13 @@ private final RestaurantMapper restaurantMapper;
         return restaurantMapper.toDto(savedRestaurant);
     }
 
+    @Transactional(readOnly = true)
     public List<RestaurantResponseDto> findAll() {
         List<Restaurant> restaurantList = restaurantRepository.findAll();
         return restaurantMapper.toListDto(restaurantList);
     }
 
+    @Transactional(readOnly = true)
     public RestaurantResponseDto findById(Integer id) {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID " + id));
@@ -41,14 +42,13 @@ private final RestaurantMapper restaurantMapper;
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID " + id));
         restaurantMapper.updateEntity(restaurant, restaurantRequestDto);
-        Restaurant savedRestaurant=restaurantRepository.save(restaurant);
+        Restaurant savedRestaurant = restaurantRepository.save(restaurant);
         return restaurantMapper.toDto(savedRestaurant);
     }
 
     public void delete(Integer id) {
-        if (!restaurantRepository.existsById(id)) {
-            throw new RestaurantNotFoundException("Restaurant not found with ID " + id);
-        }
-        restaurantRepository.deleteById(id);
+        Restaurant restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID " + id));
+        restaurantRepository.delete(restaurant);
     }
 }

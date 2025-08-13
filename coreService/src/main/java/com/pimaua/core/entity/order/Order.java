@@ -47,4 +47,22 @@ public class Order {
     private List<OrderItem> orderItems = new ArrayList<>();
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void addOrderItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
+
+    public void addOrderItems(List<OrderItem> items) {
+        items.forEach(this::addOrderItem);
+    }
+
+    public BigDecimal calculateTotalPrice() {
+        if (orderItems == null || orderItems.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return orderItems.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

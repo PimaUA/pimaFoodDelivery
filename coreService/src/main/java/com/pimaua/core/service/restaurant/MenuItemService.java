@@ -6,7 +6,7 @@ import com.pimaua.core.entity.restaurant.MenuItem;
 import com.pimaua.core.exception.custom.notfound.MenuItemNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuItemMapper;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +36,11 @@ private final MenuItemMapper menuItemMapper;
         return menuItemMapper.toDto(menuItem);
     }
 
+    public MenuItem getMenuItemById(Integer id) {
+        return menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException("MenuItem not found with ID " + id));
+    }
+
     public MenuItemResponseDto update(Integer id, MenuItemRequestDto menuItemRequestDto) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new MenuItemNotFoundException("MenuItem not found with ID " + id));
@@ -45,9 +50,8 @@ private final MenuItemMapper menuItemMapper;
     }
 
     public void delete(Integer id) {
-        if (!menuItemRepository.existsById(id)) {
-            throw new MenuItemNotFoundException("MenuItem not found with ID " + id);
-        }
-        menuItemRepository.deleteById(id);
+        MenuItem menuItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException("MenuItem not found with ID " + id));
+        menuItemRepository.delete(menuItem);
     }
 }

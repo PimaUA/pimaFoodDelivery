@@ -16,4 +16,6 @@ public class OpeningHoursRequestDto {
     private LocalTime opensAt;
     private LocalTime closesAt;
     private Boolean is24Hours;
+    @NotNull
+    private Integer restaurantId;
 }
