@@ -7,6 +7,7 @@ import com.pimaua.core.test.utils.BaseRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,7 +40,7 @@ public class MenuItemRepositoryTest extends BaseRepositoryTest {
         // Step 3: Create and save a MenuItem linked to the Menu
         MenuItem menuItem = MenuItem.builder()
                 .name("Apple Juice")
-                .price(20.0)
+                .price(BigDecimal.valueOf(20.0))
                 .menu(menu)
                 .build();
         MenuItem savedMenuItem = menuItemRepository.save(menuItem);

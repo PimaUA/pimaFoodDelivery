@@ -1,7 +1,6 @@
 package com.pimaua.core.exception.handler;
 
-import com.pimaua.core.dto.ErrorResponseDto;
-import com.pimaua.core.exception.custom.CustomWebClientFallBackException;
+import com.pimaua.core.dto.ErrorResponseDto;;
 import com.pimaua.core.exception.custom.notfound.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,20 +12,7 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(CustomWebClientFallBackException.class)
-    public ResponseEntity<ErrorResponseDto> handleCustomFallBackException
-            (CustomWebClientFallBackException customWebclientFallBackException, WebRequest webRequest) {
-
-        ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
-                .path(webRequest.getContextPath())
-                .errorCode(HttpStatus.BAD_GATEWAY)
-                .errorMessage(customWebclientFallBackException.getMessage())
-                .errorTimestamp(Instant.now())
-                .build();
-        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_GATEWAY);
-    }
-
-    @ExceptionHandler({CustomerNotFoundException.class, MenuNotFoundException.class, MenuItemNotFoundException.class,
+    @ExceptionHandler({CustomerNotFoundException.class, MenuNotFoundException.class, OpeningHoursNotFoundException.class,
     OpeningHoursNotFoundException.class, OrderItemNotFoundException.class, OrderNotFoundException.class,
     RestaurantNotFoundException.class})
     public ResponseEntity<ErrorResponseDto> handleNotFoundExceptions
@@ -38,6 +24,18 @@ public class GlobalExceptionHandler {
                 .errorTimestamp(Instant.now())
                 .build();
         return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDto>
+    handleBadRequest(IllegalArgumentException illegalArgumentException,WebRequest webRequest) {
+        ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
+                .path(webRequest.getContextPath())
+                .errorCode(HttpStatus.BAD_REQUEST)
+                .errorMessage(illegalArgumentException.getMessage())
+                .errorTimestamp(Instant.now())
+                .build();
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)

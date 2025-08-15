@@ -1,10 +1,7 @@
 package com.pimaua.core.dto.order;
 
 import com.pimaua.core.entity.enums.OrderStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,12 +11,13 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OrderResponseDto {
     private Integer id;
     private Integer userId;
     private Integer restaurantId;
     private OrderStatus orderStatus;
-    private Double totalPrice;
+    private BigDecimal totalPrice;
     private LocalDateTime createdAt;
     private String pickupAddress;
     private BigDecimal pickupLatitude;

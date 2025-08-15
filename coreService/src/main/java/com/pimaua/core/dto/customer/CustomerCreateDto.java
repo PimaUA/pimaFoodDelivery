@@ -10,6 +10,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CustomerCreateDto {
     @NotNull(message = "User ID is required")
     private Integer userId;

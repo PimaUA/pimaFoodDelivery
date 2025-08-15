@@ -4,6 +4,7 @@ import com.pimaua.core.dto.restaurant.MenuItemRequestDto;
 import com.pimaua.core.dto.restaurant.MenuItemResponseDto;
 import com.pimaua.core.entity.restaurant.MenuItem;
 import com.pimaua.core.exception.custom.notfound.MenuItemNotFoundException;
+import com.pimaua.core.exception.custom.notfound.OpeningHoursNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuItemMapper;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,9 @@ private final MenuItemRepository menuItemRepository;
 private final MenuItemMapper menuItemMapper;
 
     public MenuItemResponseDto create(MenuItemRequestDto menuItemRequestDto) {
+        if (menuItemRequestDto == null) {
+            throw new IllegalArgumentException("MenuItemRequestDto cannot be null");
+        }
         MenuItem menuItem = menuItemMapper.toEntity(menuItemRequestDto);
         MenuItem savedMenuItem = menuItemRepository.save(menuItem);
         return menuItemMapper.toDto(savedMenuItem);

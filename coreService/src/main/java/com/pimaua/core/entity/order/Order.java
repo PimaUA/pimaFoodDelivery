@@ -44,6 +44,7 @@ public class Order {
     @Column(name = "dropoff_longitude", nullable = false)
     private BigDecimal dropOffLongitude;
     @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

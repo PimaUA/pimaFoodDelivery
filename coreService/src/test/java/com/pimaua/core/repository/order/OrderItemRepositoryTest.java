@@ -45,10 +45,11 @@ public class OrderItemRepositoryTest extends BaseRepositoryTest {
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
 
         //Step 2: Create and save a User
-        Customer customer = new Customer();
-        customer.setUserId(2);
-        customer.setName("John");
-        customer.setPhoneNumber("123456");
+        Customer customer = Customer.builder()
+                .userId(2)
+                .name("john")
+                .phoneNumber("1234567")
+                .build();
         Customer savedCustomer = customerRepository.save(customer);
 
         // Step 3: Create and save an Order
@@ -56,7 +57,7 @@ public class OrderItemRepositoryTest extends BaseRepositoryTest {
                 .userId(savedCustomer.getUserId())
                 .restaurantId(savedRestaurant.getId())
                 .orderStatus(OrderStatus.CONFIRMED)
-                .totalPrice(25.0)
+                .totalPrice(BigDecimal.valueOf(25.0))
                 .createdAt(LocalDateTime.of(2025, 7, 30, 12, 0))
                 .pickupAddress("Some street")
                 .pickupLatitude(BigDecimal.valueOf(40.1234))
@@ -77,7 +78,7 @@ public class OrderItemRepositoryTest extends BaseRepositoryTest {
         // Step 5: Create and save a MenuItem linked to the Menu
         com.pimaua.core.entity.restaurant.MenuItem menuItem = com.pimaua.core.entity.restaurant.MenuItem.builder()
                 .name("Apple Juice")
-                .price(20.0)
+                .price(BigDecimal.valueOf(20.0))
                 .menu(menu)
                 .build();
         com.pimaua.core.entity.restaurant.MenuItem savedMenuItem = menuItemRepository.save(menuItem);
@@ -87,8 +88,8 @@ public class OrderItemRepositoryTest extends BaseRepositoryTest {
                 .menuItemId(savedMenuItem.getId())
                 .name("Apple Juice")
                 .quantity(2)
-                .unitPrice(10.0)
-                .totalPrice(20.0)
+                .unitPrice(BigDecimal.valueOf(10.0))
+                .totalPrice(BigDecimal.valueOf(20.0))
                 .order(savedOrder)
                 .build();
         orderItemRepository.save(orderItem);

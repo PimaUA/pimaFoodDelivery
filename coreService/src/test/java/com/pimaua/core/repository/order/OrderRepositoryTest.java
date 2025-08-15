@@ -46,7 +46,7 @@ public class OrderRepositoryTest extends BaseRepositoryTest {
                 .userId(savedCustomer.getUserId())
                 .restaurantId(savedRestaurant.getId())
                 .orderStatus(OrderStatus.CONFIRMED)
-                .totalPrice(25.0)
+                .totalPrice(BigDecimal.valueOf(25.0))
                 .createdAt(LocalDateTime.of(2025, 7, 30, 12, 0))
                 .pickupAddress("Some street")
                 .pickupLatitude(BigDecimal.valueOf(40.1234))

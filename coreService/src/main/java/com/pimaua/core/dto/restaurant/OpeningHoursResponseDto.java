@@ -10,6 +10,7 @@ import java.time.LocalTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OpeningHoursResponseDto {
     private Integer id;
     private DayOfWeek dayOfWeek;

@@ -24,6 +24,9 @@ public class OpeningHoursService {
     private final OpeningHoursMapper openingHoursMapper;
 
     public OpeningHoursResponseDto create(OpeningHoursRequestDto openingHoursRequestDto) {
+        if (openingHoursRequestDto == null) {
+            throw new IllegalArgumentException("OpeningHoursRequestDto cannot be null");
+        }
         Restaurant restaurant = restaurantRepository.findById(openingHoursRequestDto.getRestaurantId())
                 .orElseThrow(() -> new RestaurantNotFoundException(
                         "Restaurant not found with ID " + openingHoursRequestDto.getRestaurantId()));
@@ -47,7 +50,7 @@ public class OpeningHoursService {
 
     public OpeningHoursResponseDto update(Integer id, OpeningHoursRequestDto openingHoursRequestDto) {
         OpeningHours openingHours = openingHoursRepository.findById(id)
-                .orElseThrow(() -> new OpeningHoursNotFoundException("Opening hours  not found with ID " + id));
+                .orElseThrow(() -> new OpeningHoursNotFoundException("Opening hours not found with ID " + id));
         openingHoursMapper.updateEntity(openingHours, openingHoursRequestDto);
         OpeningHours savedOpeningHours = openingHoursRepository.save(openingHours);
         return openingHoursMapper.toDto(savedOpeningHours);

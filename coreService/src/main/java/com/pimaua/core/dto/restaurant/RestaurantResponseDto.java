@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RestaurantResponseDto {
     private Integer id;
     private String name;

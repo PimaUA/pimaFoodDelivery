@@ -20,6 +20,9 @@ public class RestaurantService {
     private final RestaurantMapper restaurantMapper;
 
     public RestaurantResponseDto create(RestaurantRequestDto restaurantRequestDto) {
+        if (restaurantRequestDto == null) {
+            throw new IllegalArgumentException("RestaurantRequestDto cannot be null");
+        }
         Restaurant restaurant = restaurantMapper.toEntity(restaurantRequestDto);
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
         return restaurantMapper.toDto(savedRestaurant);

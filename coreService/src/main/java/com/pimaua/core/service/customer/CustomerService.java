@@ -21,6 +21,9 @@ public class CustomerService {
     private final CustomerMapper customerMapper;
 
     public CustomerResponseDto createCustomer(CustomerCreateDto customerCreateDto) {
+        if (customerCreateDto == null) {
+            throw new IllegalArgumentException("CustomerCreateDto cannot be null");
+        }
         Customer customer = customerMapper.toEntity(customerCreateDto);
         customer = customerRepository.save(customer);
         return customerMapper.toResponseDto(customer);
@@ -33,6 +36,9 @@ public class CustomerService {
 
     @Transactional(readOnly = true)
     public CustomerResponseDto findById(Integer id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Invalid customer ID");
+        }
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID " + id));
         return customerMapper.toResponseDto(customer);
@@ -40,12 +46,21 @@ public class CustomerService {
 
     @Transactional(readOnly = true)
     public CustomerResponseDto findByName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
         Customer customer = customerRepository.findByName(name)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with name " + name));
         return customerMapper.toResponseDto(customer);
     }
 
     public CustomerResponseDto updateCustomer(Integer id, CustomerUpdateDto customerUpdateDto) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Invalid customer ID");
+        }
+        if (customerUpdateDto == null) {
+            throw new IllegalArgumentException("CustomerUpdateDto cannot be null");
+        }
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
         customerMapper.updateEntity(customer, customerUpdateDto);

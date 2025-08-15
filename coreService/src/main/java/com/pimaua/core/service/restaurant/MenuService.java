@@ -20,6 +20,9 @@ public class MenuService {
     private final MenuMapper menuMapper;
 
     public MenuResponseDto create(MenuRequestDto menuRequestDto) {
+        if (menuRequestDto == null) {
+            throw new IllegalArgumentException("MenuRequestDto cannot be null");
+        }
         Menu menu = menuMapper.toEntity(menuRequestDto);
         Menu savedMenu = menuRepository.save(menu);
         return menuMapper.toDto(savedMenu);

@@ -66,6 +66,7 @@ public class OrderItemService {
         order.setTotalPrice(order.calculateTotalPrice());
 
         orderRepository.save(order);
+        orderItemRepository.delete(orderItem);
     }
 
     private BigDecimal calculateTotalPrice(BigDecimal unitPrice, int quantity) {

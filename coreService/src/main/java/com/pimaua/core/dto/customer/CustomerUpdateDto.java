@@ -3,15 +3,13 @@ package com.pimaua.core.dto.customer;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CustomerUpdateDto {
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2-100 characters")
