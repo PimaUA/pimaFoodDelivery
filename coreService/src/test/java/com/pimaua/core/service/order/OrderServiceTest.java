@@ -174,7 +174,7 @@ class OrderServiceTest {
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
 
-        OrderResponseDto result = orderService.recalculateOrderTotal(1);
+        OrderResponseDto result = orderService.recalculateTotalPrice(1);
 
         assertNotNull(result);
         assertEquals(new BigDecimal("25.00"), order.getTotalPrice());

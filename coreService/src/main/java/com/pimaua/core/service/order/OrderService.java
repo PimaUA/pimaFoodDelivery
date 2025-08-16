@@ -9,6 +9,8 @@ import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.order.OrderMapper;
 import com.pimaua.core.repository.order.OrderRepository;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,10 +26,12 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final RestaurantRepository restaurantRepository;
     private final OrderItemService orderItemService;
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     public OrderResponseDto create(OrderCreateDto orderCreateDto, Integer userId) {
         // 1. Validate restaurant exists
         if (!restaurantRepository.existsById(orderCreateDto.getRestaurantId())) {
+            logger.error("Restaurant not found with id={}", orderCreateDto.getRestaurantId());
             throw new RestaurantNotFoundException("Restaurant not found with ID " +
                     orderCreateDto.getRestaurantId());
         }
@@ -70,21 +74,30 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponseDto findById(Integer id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("Order not found with id={}", id);
+                    return new OrderNotFoundException("Order not found with ID " + id);
+                });
         return orderMapper.toDto(order);
     }
 
     public OrderResponseDto update(Integer id, OrderUpdateDto orderUpdateDto) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("Order not found with id={}", id);
+                    return new OrderNotFoundException("Order not found with ID " + id);
+                });
         orderMapper.updateEntity(order, orderUpdateDto);
         Order savedOrder = orderRepository.save(order);
         return orderMapper.toDto(savedOrder);
     }
 
-    public OrderResponseDto recalculateOrderTotal(Integer orderId) {
+    public OrderResponseDto recalculateTotalPrice(Integer orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID " + orderId));
+                .orElseThrow(() -> {
+                    logger.error("Order not found with id={}", orderId);
+                    return new OrderNotFoundException("Order not found with ID " + orderId);
+                });
         order.setTotalPrice(order.calculateTotalPrice());
         Order savedOrder = orderRepository.save(order);
         return orderMapper.toDto(savedOrder);
@@ -93,6 +106,7 @@ public class OrderService {
     public void delete(Integer id) {
         int deletedCount = orderRepository.deleteOrderById(id);
         if (deletedCount == 0) {
+            logger.error("Order not found with id={}", id);
             throw new OrderNotFoundException("Order not found with ID " + id);
         }
     }

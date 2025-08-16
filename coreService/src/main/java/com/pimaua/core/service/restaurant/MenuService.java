@@ -6,6 +6,8 @@ import com.pimaua.core.entity.restaurant.Menu;
 import com.pimaua.core.exception.custom.notfound.MenuNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuMapper;
 import com.pimaua.core.repository.restaurant.MenuRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,11 @@ import java.util.List;
 public class MenuService {
     private final MenuRepository menuRepository;
     private final MenuMapper menuMapper;
+    private static final Logger logger = LoggerFactory.getLogger(MenuService.class);
 
     public MenuResponseDto create(MenuRequestDto menuRequestDto) {
         if (menuRequestDto == null) {
+            logger.error("Failed to create Menu, no input");
             throw new IllegalArgumentException("MenuRequestDto cannot be null");
         }
         Menu menu = menuMapper.toEntity(menuRequestDto);
@@ -37,13 +41,19 @@ public class MenuService {
     @Transactional(readOnly = true)
     public MenuResponseDto findById(Integer id) {
         Menu menu = menuRepository.findById(id)
-                .orElseThrow(() -> new MenuNotFoundException("Menu not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("Menu not found with id={}", id);
+                    return new MenuNotFoundException("Menu not found with ID " + id);
+                });
         return menuMapper.toDto(menu);
     }
 
     public MenuResponseDto update(Integer id, MenuRequestDto menuRequestDto) {
         Menu menu = menuRepository.findById(id)
-                .orElseThrow(() -> new MenuNotFoundException("Menu not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("Menu not found with id={}", id);
+                    return new MenuNotFoundException("Menu not found with ID " + id);
+                });
         menuMapper.updateEntity(menu, menuRequestDto);
         Menu savedMenu = menuRepository.save(menu);
         return menuMapper.toDto(savedMenu);
@@ -51,7 +61,10 @@ public class MenuService {
 
     public void delete(Integer id) {
         Menu menu = menuRepository.findById(id)
-                .orElseThrow(() -> new MenuNotFoundException("Menu not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("Menu not found with id={}", id);
+                    return new MenuNotFoundException("Menu not found with ID " + id);
+                });
         menuRepository.delete(menu);
     }
 }

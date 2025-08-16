@@ -122,7 +122,7 @@ class OrderItemServiceTest {
                 .thenReturn(existingOrderItem);
         when(orderItemRepository.save(existingOrderItem)).thenReturn(existingOrderItem);
         // When
-        OrderItem result = orderItemService.createOrderItem(orderItemRequestDto);
+        OrderItem result = orderItemService.create(orderItemRequestDto);
         // Then
         assertThat(result).isEqualTo(existingOrderItem);
         assertThat(result.getMenuItemId()).isEqualTo(1);

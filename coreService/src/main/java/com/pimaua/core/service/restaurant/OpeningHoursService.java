@@ -9,6 +9,8 @@ import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.restaurant.OpeningHoursMapper;
 import com.pimaua.core.repository.restaurant.OpeningHoursRepository;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,15 +24,19 @@ public class OpeningHoursService {
     private final OpeningHoursRepository openingHoursRepository;
     private final RestaurantRepository restaurantRepository;
     private final OpeningHoursMapper openingHoursMapper;
+    private static final Logger logger = LoggerFactory.getLogger(OpeningHoursService.class);
 
     public OpeningHoursResponseDto create(OpeningHoursRequestDto openingHoursRequestDto) {
         if (openingHoursRequestDto == null) {
+            logger.error("Failed to create OpeningHours, no input");
             throw new IllegalArgumentException("OpeningHoursRequestDto cannot be null");
         }
         Restaurant restaurant = restaurantRepository.findById(openingHoursRequestDto.getRestaurantId())
-                .orElseThrow(() -> new RestaurantNotFoundException(
-                        "Restaurant not found with ID " + openingHoursRequestDto.getRestaurantId()));
-
+                .orElseThrow(() -> {
+                    logger.error("Restaurant not found with id={}", openingHoursRequestDto.getRestaurantId());
+                    return new RestaurantNotFoundException(
+                            "Restaurant not found with ID " + openingHoursRequestDto.getRestaurantId());
+                });
         OpeningHours openingHours = openingHoursMapper.toEntity(openingHoursRequestDto);
         openingHours.setRestaurant(restaurant);
         OpeningHours savedOpeningHours = openingHoursRepository.save(openingHours);
@@ -44,13 +50,20 @@ public class OpeningHoursService {
 
     public OpeningHoursResponseDto findById(Integer id) {
         OpeningHours openingHours = openingHoursRepository.findById(id)
-                .orElseThrow(() -> new OpeningHoursNotFoundException("Opening hours not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("OpeningHours not found with id={}", id);
+                    return new OpeningHoursNotFoundException("Opening hours not found with ID " + id);
+                });
+
         return openingHoursMapper.toDto(openingHours);
     }
 
     public OpeningHoursResponseDto update(Integer id, OpeningHoursRequestDto openingHoursRequestDto) {
         OpeningHours openingHours = openingHoursRepository.findById(id)
-                .orElseThrow(() -> new OpeningHoursNotFoundException("Opening hours not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("OpeningHours not found with id={}", id);
+                    return new OpeningHoursNotFoundException("Opening hours not found with ID " + id);
+                });
         openingHoursMapper.updateEntity(openingHours, openingHoursRequestDto);
         OpeningHours savedOpeningHours = openingHoursRepository.save(openingHours);
         return openingHoursMapper.toDto(savedOpeningHours);
@@ -58,7 +71,10 @@ public class OpeningHoursService {
 
     public void delete(Integer id) {
         OpeningHours openingHours = openingHoursRepository.findById(id)
-                .orElseThrow(() -> new OpeningHoursNotFoundException("Opening hours not found with ID " + id));
+                .orElseThrow(() -> {
+                    logger.error("OpeningHours not found with id={}", id);
+                    return new OpeningHoursNotFoundException("Opening hours not found with ID " + id);
+                });
         openingHoursRepository.delete(openingHours);
     }
 }

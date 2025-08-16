@@ -233,7 +233,7 @@ public class CustomerServiceTest {
         when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
 
         // When
-        customerService.deleteCustomer(1);
+        customerService.delete(1);
 
         // Then
         verify(customerRepository).findById(1);
@@ -247,7 +247,7 @@ public class CustomerServiceTest {
 
         // When & Then
         CustomerNotFoundException exception = assertThrows(CustomerNotFoundException.class, () -> {
-            customerService.deleteCustomer(999);
+            customerService.delete(999);
         });
 
         assertEquals("Customer not found with ID 999", exception.getMessage());
@@ -263,7 +263,7 @@ public class CustomerServiceTest {
 
         // When & Then
         assertThrows(RuntimeException.class, () -> {
-            customerService.deleteCustomer(1);
+            customerService.delete(1);
         });
 
         verify(customerRepository).findById(1);

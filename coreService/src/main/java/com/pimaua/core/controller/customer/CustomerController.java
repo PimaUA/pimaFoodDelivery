@@ -4,8 +4,10 @@ import com.pimaua.core.dto.ResponseDto;
 import com.pimaua.core.dto.customer.CustomerCreateDto;
 import com.pimaua.core.dto.customer.CustomerResponseDto;
 import com.pimaua.core.dto.customer.CustomerUpdateDto;
-import com.pimaua.core.dto.enums.CustomerResponseType;
+import com.pimaua.core.dto.enums.EntityType;
+import com.pimaua.core.dto.enums.ResponseType;
 import com.pimaua.core.service.customer.CustomerService;
+import com.pimaua.core.utils.ResponseBuilder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -16,55 +18,40 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "/api/customer", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api/customers", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Validated
 public class CustomerController {
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ResponseDto<CustomerResponseDto>> createCustomer(@Valid @RequestBody CustomerCreateDto customerCreateDto) {
         CustomerResponseDto customerResponseDto = customerService.createCustomer(customerCreateDto);
-        CustomerResponseType type = CustomerResponseType.CREATED;
-        ResponseDto<CustomerResponseDto> response = new ResponseDto<>(type.getStatusCode(), type.getMessage(), customerResponseDto);
-        return ResponseEntity.status(type.getStatusCode())
-                .body(response);
+        return ResponseBuilder.buildResponse(ResponseType.CREATED, EntityType.CUSTOMER,customerResponseDto);
     }
 
-    @GetMapping("/fetch")
+    @GetMapping
     public ResponseEntity<ResponseDto<List<CustomerResponseDto>>> findAllCustomers() {
         List<CustomerResponseDto> customers = customerService.findAll();
-        CustomerResponseType type = CustomerResponseType.SUCCESS;
-        ResponseDto<List<CustomerResponseDto>> response = new ResponseDto<>(type.getStatusCode(), type.getMessage(), customers);
-        return ResponseEntity.status(type.getStatusCode())
-                .body(response);
+        return ResponseBuilder.buildResponse(ResponseType.SUCCESS,EntityType.CUSTOMER,customers);
     }
 
-    @GetMapping("/fetch/{id}")
+    @GetMapping("{id}")
     public ResponseEntity<ResponseDto<CustomerResponseDto>> findCustomer(@PathVariable Integer id) {
         CustomerResponseDto customer = customerService.findById(id);
-        CustomerResponseType type = CustomerResponseType.SUCCESS;
-        ResponseDto<CustomerResponseDto> response = new ResponseDto<>(type.getStatusCode(), type.getMessage(), customer);
-        return ResponseEntity.status(type.getStatusCode())
-                .body(response);
+        return ResponseBuilder.buildResponse(ResponseType.SUCCESS,EntityType.CUSTOMER,customer);
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ResponseDto<CustomerResponseDto>> updateCustomer
             (@PathVariable Integer id, @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
         CustomerResponseDto customerResponseDto = customerService.updateCustomer(id, customerUpdateDto);
-        CustomerResponseType type = CustomerResponseType.SUCCESS;
-        ResponseDto<CustomerResponseDto> response = new ResponseDto<>(type.getStatusCode(), type.getMessage(), customerResponseDto);
-        return ResponseEntity.status(type.getStatusCode())
-                .body(response);
+        return ResponseBuilder.buildResponse(ResponseType.UPDATED,EntityType.CUSTOMER,customerResponseDto);
     }
 
-    @DeleteMapping("delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDto<CustomerResponseDto>> deleteCustomer(@PathVariable Integer id) {
-        customerService.deleteCustomer(id);
-        CustomerResponseType type = CustomerResponseType.SUCCESS;
-        ResponseDto<CustomerResponseDto> response = new ResponseDto<>(type.getStatusCode(), type.getMessage(), null);
-        return ResponseEntity.status(type.getStatusCode())
-                .body(response);
+        customerService.delete(id);
+        return ResponseBuilder.buildResponse(ResponseType.DELETED,EntityType.CUSTOMER,null);
     }
 }
