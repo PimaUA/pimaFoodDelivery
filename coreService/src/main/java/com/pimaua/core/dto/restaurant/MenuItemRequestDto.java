@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 public class MenuItemRequestDto {
+    @NotNull
+    private Integer id;
     @NotBlank
     private String name;
     private String description;
@@ -20,4 +22,6 @@ public class MenuItemRequestDto {
     @Positive
     private BigDecimal price;
     private Boolean isAvailable;
+    @NotNull
+    private Integer menuId;
 }

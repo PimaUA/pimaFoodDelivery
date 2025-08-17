@@ -110,7 +110,7 @@ class OrderServiceTest {
     @Test
     void create_Success() {
         when(restaurantRepository.existsById(orderCreateDto.getRestaurantId())).thenReturn(true);
-        when(orderItemService.buildOrderItem(orderItemRequestDto)).thenReturn(orderItem);
+        when(orderItemService.buildOrderItemForOrder(orderItemRequestDto)).thenReturn(orderItem);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
 
@@ -118,7 +118,7 @@ class OrderServiceTest {
 
         assertNotNull(result);
         verify(restaurantRepository).existsById(orderCreateDto.getRestaurantId());
-        verify(orderItemService).buildOrderItem(orderItemRequestDto);
+        verify(orderItemService).buildOrderItemForOrder(orderItemRequestDto);
         verify(orderRepository).save(any(Order.class));
         verify(orderMapper).toDto(order);
     }

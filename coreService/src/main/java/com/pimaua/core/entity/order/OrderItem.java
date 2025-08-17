@@ -2,6 +2,7 @@ package com.pimaua.core.entity.order;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,5 +32,6 @@ public class OrderItem {
     @JoinColumn(name="order_id", nullable = false)
     private Order order;
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

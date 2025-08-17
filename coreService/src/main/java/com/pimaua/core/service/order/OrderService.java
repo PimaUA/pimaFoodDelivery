@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,8 +36,7 @@ public class OrderService {
             throw new RestaurantNotFoundException("Restaurant not found with ID " +
                     orderCreateDto.getRestaurantId());
         }
-
-        // 2. Create order entity (without items first)
+        // 2. Create order
         Order order = Order.builder()
                 .userId(userId)
                 .restaurantId(orderCreateDto.getRestaurantId())
@@ -49,19 +49,18 @@ public class OrderService {
                 .orderStatus(OrderStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
-
-        // 3. Create and add order items
+        // 3. Attach items before saving
         List<OrderItemRequestDto> requestItems = orderCreateDto.getOrderItems();
         if (requestItems != null && !requestItems.isEmpty()) {
             for (OrderItemRequestDto itemRequestDto : requestItems) {
-                OrderItem orderItem = orderItemService.buildOrderItem(itemRequestDto);
+                OrderItem orderItem = orderItemService.buildOrderItemForOrder(itemRequestDto);
                 order.addOrderItem(orderItem);
             }
         }
+        // 4. Calculate total price and save only once
         order.setTotalPrice(order.calculateTotalPrice());
-
-        // 4. Save and return
         Order savedOrder = orderRepository.save(order);
+
         return orderMapper.toDto(savedOrder);
     }
 
@@ -88,8 +87,8 @@ public class OrderService {
                     return new OrderNotFoundException("Order not found with ID " + id);
                 });
         orderMapper.updateEntity(order, orderUpdateDto);
-        Order savedOrder = orderRepository.save(order);
-        return orderMapper.toDto(savedOrder);
+        //Order savedOrder = orderRepository.save(order);
+        return orderMapper.toDto(order);
     }
 
     public OrderResponseDto recalculateTotalPrice(Integer orderId) {
@@ -98,9 +97,12 @@ public class OrderService {
                     logger.error("Order not found with id={}", orderId);
                     return new OrderNotFoundException("Order not found with ID " + orderId);
                 });
-        order.setTotalPrice(order.calculateTotalPrice());
-        Order savedOrder = orderRepository.save(order);
-        return orderMapper.toDto(savedOrder);
+        BigDecimal newTotal = order.calculateTotalPrice();
+        if (order.getTotalPrice() == null || order.getTotalPrice().compareTo(newTotal) != 0) {
+            order.setTotalPrice(newTotal);
+            orderRepository.save(order);
+        }
+        return orderMapper.toDto(order);
     }
 
     public void delete(Integer id) {

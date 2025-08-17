@@ -19,4 +19,6 @@ public class MenuRequestDto {
     @NotNull
     @NotEmpty
     private List<MenuItemRequestDto> menuItems;
+    @NotNull
+    private Integer restaurantId;
 }

@@ -16,17 +16,17 @@ public class GlobalExceptionHandler {
     OpeningHoursNotFoundException.class, OrderItemNotFoundException.class, OrderNotFoundException.class,
     RestaurantNotFoundException.class})
     public ResponseEntity<ErrorResponseDto> handleNotFoundExceptions
-            (CustomerNotFoundException customerNotFoundException, WebRequest webRequest) {
+            (Exception exception, WebRequest webRequest) {
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getContextPath())
                 .errorCode(HttpStatus.NOT_FOUND)
-                .errorMessage(customerNotFoundException.getMessage())
+                .errorMessage(exception.getMessage())
                 .errorTimestamp(Instant.now())
                 .build();
         return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({IllegalArgumentException.class,IllegalStateException.class})
     public ResponseEntity<ErrorResponseDto>
     handleBadRequest(IllegalArgumentException illegalArgumentException,WebRequest webRequest) {
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()

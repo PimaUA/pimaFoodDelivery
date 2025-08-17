@@ -3,6 +3,7 @@ package com.pimaua.core.entity.restaurant;
 import com.pimaua.core.entity.enums.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,5 +33,6 @@ public class OpeningHours {
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

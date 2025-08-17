@@ -5,7 +5,7 @@ import com.pimaua.core.dto.enums.EntityType;
 import com.pimaua.core.dto.enums.ResponseType;
 import com.pimaua.core.dto.order.OrderItemRequestDto;
 import com.pimaua.core.dto.order.OrderItemResponseDto;
-import com.pimaua.core.entity.order.OrderItem;
+import com.pimaua.core.dto.order.OrderResponseDto;
 import com.pimaua.core.mapper.order.OrderItemMapper;
 import com.pimaua.core.service.order.OrderItemService;
 import com.pimaua.core.utils.ResponseBuilder;
@@ -26,17 +26,23 @@ public class OrderItemController {
     private final OrderItemService orderItemService;
     private final OrderItemMapper orderItemMapper;
 
-    @PostMapping
-    public ResponseEntity<ResponseDto<OrderItemResponseDto>>
-    createOrderItem(@Valid @RequestBody OrderItemRequestDto orderItemRequestDto) {
-        OrderItem orderItem = orderItemService.create(orderItemRequestDto);
-        OrderItemResponseDto orderItemResponseDto=orderItemMapper.toDto(orderItem);
+    @PostMapping("/{orderId}/item")
+    public ResponseEntity<ResponseDto<OrderItemResponseDto>> addItemToOrder(
+            @PathVariable Integer orderId,
+            @Valid @RequestBody OrderItemRequestDto orderItemRequestDto) {
+        OrderItemResponseDto orderItemResponseDto = orderItemService.addItemToExistingOrder(orderId,orderItemRequestDto);
         return ResponseBuilder.buildResponse(ResponseType.CREATED, EntityType.ORDERITEM, orderItemResponseDto);
     }
 
     @GetMapping
     public ResponseEntity<ResponseDto<List<OrderItemResponseDto>>> findAllOrderItems() {
         List<OrderItemResponseDto> orderItems = orderItemService.findAll();
+        return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.ORDERITEM, orderItems);
+    }
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<ResponseDto<List<OrderItemResponseDto>>> getOrderItemsByOrder(@PathVariable Integer orderId) {
+        List<OrderItemResponseDto>orderItems=orderItemService.findByOrderId(orderId);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.ORDERITEM, orderItems);
     }
 

@@ -257,7 +257,7 @@ class OrderItemServiceTest {
                 eq(BigDecimal.valueOf(10.00)), eq(BigDecimal.valueOf(20.00))))
                 .thenReturn(existingOrderItem);
         // When
-        OrderItem result = orderItemService.buildOrderItem(orderItemRequestDto);
+        OrderItem result = orderItemService.buildOrderItemForOrder(orderItemRequestDto);
         // Then
         assertThat(result).isEqualTo(existingOrderItem);
         verify(menuItemService).getMenuItemById(1);
@@ -289,7 +289,7 @@ class OrderItemServiceTest {
                     .thenReturn(expectedOrderItem);
 
             // When
-            OrderItem result = orderItemService.buildOrderItem(orderItemRequestDto);
+            OrderItem result = orderItemService.buildOrderItemForOrder(orderItemRequestDto);
 
             // Then
             assertThat(result.getTotalPrice()).isEqualByComparingTo(expectedTotal);

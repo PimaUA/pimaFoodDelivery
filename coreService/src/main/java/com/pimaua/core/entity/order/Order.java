@@ -3,6 +3,7 @@ package com.pimaua.core.entity.order;
 import com.pimaua.core.entity.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ public class Order {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     public void addOrderItem(OrderItem item) {

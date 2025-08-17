@@ -2,6 +2,7 @@ package com.pimaua.core.entity.customer;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -23,5 +24,6 @@ public class Customer {
     @Column(name="phone_number", nullable = false)
     private String phoneNumber;
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
