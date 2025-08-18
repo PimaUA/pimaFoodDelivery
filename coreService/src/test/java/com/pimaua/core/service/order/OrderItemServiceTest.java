@@ -10,6 +10,7 @@ import com.pimaua.core.exception.custom.notfound.OrderItemNotFoundException;
 import com.pimaua.core.mapper.order.OrderItemMapper;
 import com.pimaua.core.repository.order.OrderItemRepository;
 import com.pimaua.core.repository.order.OrderRepository;
+import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import com.pimaua.core.service.restaurant.MenuItemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,13 +42,14 @@ class OrderItemServiceTest {
     private OrderItemMapper orderItemMapper;
     @Mock
     private MenuItemService menuItemService;
+    @Mock
+    private MenuItemRepository menuItemRepository;
 
     @InjectMocks
     private OrderItemService orderItemService;
 
     private OrderItemRequestDto orderItemRequestDto;
     private OrderItem existingOrderItem;
-    private OrderItem updatedOrderItem;
     private OrderItemResponseDto orderItemResponseDto;
     private MenuItem menuItem;
     private Order order;
@@ -64,7 +66,7 @@ class OrderItemServiceTest {
         order = spy(Order.builder()
                 .userId(1)
                 .restaurantId(2)
-                .orderStatus(OrderStatus.CONFIRMED)
+                .orderStatus(OrderStatus.PENDING)
                 .totalPrice(BigDecimal.valueOf(20.0))
                 .createdAt(LocalDateTime.of(2025, 7, 30, 12, 0))
                 .pickupAddress("Some street")
@@ -87,7 +89,7 @@ class OrderItemServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        updatedOrderItem = OrderItem.builder()
+        OrderItem updatedOrderItem = OrderItem.builder()
                 .id(1)
                 .menuItemId(1)
                 .name("Updated Item")
@@ -114,26 +116,26 @@ class OrderItemServiceTest {
     }
 
     @Test
-    void createOrderItem_Success() {
-        // Given
+    void addItemToExistingOrder_Success() {
+        // given
+        when(orderRepository.findById(100)).thenReturn(Optional.of(order));
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
-        when(orderItemMapper.toEntity(any(OrderItemRequestDto.class), eq(menuItem),
-                eq(BigDecimal.valueOf(10.00)), eq(BigDecimal.valueOf(20.00))))
+        when(orderItemMapper.toEntity(any(), any(), any(), any()))
                 .thenReturn(existingOrderItem);
-        when(orderItemRepository.save(existingOrderItem)).thenReturn(existingOrderItem);
-        // When
-        OrderItem result = orderItemService.create(orderItemRequestDto);
-        // Then
-        assertThat(result).isEqualTo(existingOrderItem);
-        assertThat(result.getMenuItemId()).isEqualTo(1);
-        assertThat(result.getName()).isEqualTo("Menu Item");
-        assertThat(result.getQuantity()).isEqualTo(2);
-        assertThat(result.getUnitPrice()).isEqualTo(BigDecimal.valueOf(10.00));
-        assertThat(result.getTotalPrice()).isEqualTo(BigDecimal.valueOf(20.00));
-        verify(menuItemService).getMenuItemById(1);
-        verify(orderItemMapper).toEntity(orderItemRequestDto, menuItem,
-                BigDecimal.valueOf(10.00), BigDecimal.valueOf(20.00));
-        verify(orderItemRepository).save(existingOrderItem);
+        when(orderItemMapper.toDto(existingOrderItem))
+                .thenReturn(orderItemResponseDto);
+        // when
+        OrderItemResponseDto result =
+                orderItemService.addItemToExistingOrder(100, orderItemRequestDto);
+        // then
+        assertNotNull(result);
+        assertEquals(orderItemResponseDto, result);
+        assertEquals(1, order.getOrderItems().size());
+        assertEquals(existingOrderItem, order.getOrderItems().get(0));
+        assertEquals(BigDecimal.valueOf(20.00), order.getTotalPrice());
+        verify(orderRepository).save(order);
+        verify(orderItemMapper).toEntity(any(), any(), any(), any());
+        verify(orderItemMapper).toDto(existingOrderItem);
     }
 
     @Test
@@ -179,28 +181,61 @@ class OrderItemServiceTest {
     }
 
     @Test
+    void findByOrderId_Success() {
+        // Given
+        int orderId = 100;
+        List<OrderItem> orderItems = Arrays.asList(existingOrderItem);
+        List<OrderItemResponseDto> expectedDtos = Arrays.asList(orderItemResponseDto);
+        when(orderItemRepository.findByOrderId(orderId)).thenReturn(orderItems);
+        when(orderItemMapper.toListDto(orderItems)).thenReturn(expectedDtos);
+        // When
+        List<OrderItemResponseDto> result = orderItemService.findByOrderId(orderId);
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedDtos, result);
+        assertEquals(1, result.size());
+        verify(orderItemRepository).findByOrderId(orderId);
+        verify(orderItemMapper).toListDto(orderItems);
+    }
+
+    @Test
+    void findByOrderId_OrderItemNotFound() {
+        // Given
+        int orderId = 999;
+        when(orderItemRepository.findByOrderId(orderId)).thenReturn(List.of());
+
+        // When & Then
+        OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class,
+                () -> orderItemService.findByOrderId(orderId));
+
+        assertEquals("No OrderItems found for order ID " + orderId, exception.getMessage());
+        verify(orderItemRepository).findByOrderId(orderId);
+        verifyNoInteractions(orderItemMapper);
+    }
+
+    @Test
     void update_Success() {
+        // given
         BigDecimal unitPrice = menuItem.getPrice();
         BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(orderItemRequestDto.getQuantity()));
         when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
         doNothing().when(orderItemMapper).updateEntity(existingOrderItem, orderItemRequestDto, menuItem,
                 unitPrice, totalPrice);
-        when(orderItemRepository.save(existingOrderItem)).thenReturn(updatedOrderItem);
-
+        order.setOrderStatus(OrderStatus.PENDING);
         when(orderRepository.save(order)).thenReturn(order);
-        when(orderItemMapper.toDto(updatedOrderItem)).thenReturn(orderItemResponseDto);
-        // When
+
+        when(orderItemMapper.toDto(existingOrderItem)).thenReturn(orderItemResponseDto);
+        // when
         OrderItemResponseDto result = orderItemService.update(1, orderItemRequestDto);
-        // Then
+        // then
         assertEquals(orderItemResponseDto, result);
         verify(orderItemRepository).findById(1);
         verify(menuItemService).getMenuItemById(1);
         verify(orderItemMapper).updateEntity(existingOrderItem, orderItemRequestDto, menuItem,
                 BigDecimal.valueOf(10.00), BigDecimal.valueOf(20.00));
-        verify(orderItemRepository).save(existingOrderItem);
         verify(orderRepository).save(order);
-        verify(orderItemMapper).toDto(updatedOrderItem);
+        verify(orderItemMapper).toDto(existingOrderItem);
     }
 
     @Test
@@ -219,20 +254,18 @@ class OrderItemServiceTest {
     @Test
     void delete_Success() {
         // Given
-        order.getOrderItems().add(existingOrderItem); // add the item to order
+        order.getOrderItems().add(existingOrderItem);
+        existingOrderItem.setOrder(order);
         BigDecimal recalculatedTotal = BigDecimal.valueOf(15.00);
-
         when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
-        doNothing().when(orderItemRepository).delete(existingOrderItem);
         when(order.calculateTotalPrice()).thenReturn(recalculatedTotal);
+        order.setOrderStatus(OrderStatus.PENDING);
         when(orderRepository.save(order)).thenReturn(order);
-
         // When
         orderItemService.delete(1);
-
         // Then
         verify(orderItemRepository).findById(1);
-        verify(orderItemRepository).delete(existingOrderItem);
+        assertFalse(order.getOrderItems().contains(existingOrderItem)); // ensure removed
         verify(order).setTotalPrice(recalculatedTotal);
         verify(orderRepository).save(order);
     }
@@ -266,37 +299,29 @@ class OrderItemServiceTest {
     }
 
     @Test
-    void calculateTotalPrice_ShouldCalculateCorrectly_WithDifferentQuantities() {
+    void calculateTotalPrice_Success() {
 // Given
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
-
         int[] quantities = {1, 3, 5};
-
         for (int quantity : quantities) {
             orderItemRequestDto.setQuantity(quantity);
-
             BigDecimal expectedTotal = menuItem.getPrice().multiply(BigDecimal.valueOf(quantity));
-
             OrderItem expectedOrderItem = OrderItem.builder()
                     .menuItemId(1)
                     .quantity(quantity)
                     .unitPrice(menuItem.getPrice())
                     .totalPrice(expectedTotal)
                     .build();
-
             when(orderItemMapper.toEntity(eq(orderItemRequestDto), eq(menuItem),
                     eq(menuItem.getPrice()), eq(expectedTotal)))
                     .thenReturn(expectedOrderItem);
-
             // When
             OrderItem result = orderItemService.buildOrderItemForOrder(orderItemRequestDto);
-
             // Then
             assertThat(result.getTotalPrice()).isEqualByComparingTo(expectedTotal);
             assertThat(result.getUnitPrice()).isEqualByComparingTo(menuItem.getPrice());
             assertThat(result.getQuantity()).isEqualTo(quantity);
         }
-
         verify(menuItemService, times(quantities.length)).getMenuItemById(1);
     }
 }

@@ -9,6 +9,7 @@ import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.exception.custom.notfound.MenuNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuMapper;
 import com.pimaua.core.repository.restaurant.MenuRepository;
+import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,8 @@ public class MenuServiceTest {
     private MenuRepository menuRepository;
     @Mock
     private MenuMapper menuMapper;
+    @Mock
+    RestaurantRepository restaurantRepository;
 
     @InjectMocks
     private MenuService menuService;
@@ -80,6 +83,7 @@ public class MenuServiceTest {
                 .name("Some Restaurant")
                 .isActive(true)
                 .menuItems(List.of(menuItemRequestDto))
+                .restaurantId(1)
                 .build();
 
         menuResponseDto = MenuResponseDto.builder()
@@ -93,18 +97,23 @@ public class MenuServiceTest {
     //CreateMenuTests
     @Test
     void createMenu_Success() {
-        //given
+        // given
+        Restaurant restaurant = menu.getRestaurant();
+        when(restaurantRepository.findById(anyInt())).thenReturn(Optional.of(restaurant));
         when(menuMapper.toEntity(menuRequestDto)).thenReturn(menu);
         when(menuRepository.save(menu)).thenReturn(menu);
         when(menuMapper.toDto(menu)).thenReturn(menuResponseDto);
-        //when
+
+        // when
         MenuResponseDto result = menuService.create(menuRequestDto);
-        //then
+
+        // then
         assertNotNull(result);
         assertEquals(menuResponseDto.getId(), result.getId());
         assertEquals(menuResponseDto.getName(), result.getName());
 
-        // interaction verification
+        // verify interactions
+        verify(restaurantRepository).findById(anyInt());
         verify(menuMapper).toEntity(menuRequestDto);
         verify(menuRepository).save(menu);
         verify(menuMapper).toDto(menu);
@@ -113,6 +122,8 @@ public class MenuServiceTest {
     @Test
     void createMenu_RepositoryException() {
         //given
+        Restaurant restaurant = menu.getRestaurant(); // get a valid restaurant
+        when(restaurantRepository.findById(any())).thenReturn(Optional.of(restaurant));
         when(menuMapper.toEntity(menuRequestDto)).thenReturn(menu);
         when(menuRepository.save(menu)).thenThrow(new RuntimeException("Database error"));
         //when&then

@@ -39,6 +39,7 @@ public class MenuItemRepositoryTest extends BaseRepositoryTest {
 
         // Step 3: Create and save a MenuItem linked to the Menu
         MenuItem menuItem = MenuItem.builder()
+                .id(1)
                 .name("Apple Juice")
                 .price(BigDecimal.valueOf(20.0))
                 .menu(menu)

@@ -8,6 +8,7 @@ import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.exception.custom.notfound.MenuItemNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuItemMapper;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
+import com.pimaua.core.repository.restaurant.MenuRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,8 @@ import static org.mockito.Mockito.verify;
 public class MenuItemServiceTest {
     @Mock
     private MenuItemRepository menuItemRepository;
+    @Mock
+    MenuRepository menuRepository;
     @Mock
     private MenuItemMapper menuItemMapper;
 
@@ -83,35 +86,49 @@ public class MenuItemServiceTest {
                 .build();
     }
 
-    //CreateMenuItem Tests
     @Test
     void createMenuItem_Success() {
-        //given
+        // given
+        Integer menuId = menuItem.getMenu().getId(); // assuming menu has an id
+        menuItemRequestDto.setMenuId(menuId);
+        Menu menu = menuItem.getMenu(); // use the menu from setup
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
         when(menuItemMapper.toEntity(menuItemRequestDto)).thenReturn(menuItem);
         when(menuItemRepository.save(menuItem)).thenReturn(menuItem);
         when(menuItemMapper.toDto(menuItem)).thenReturn(menuItemResponseDto);
-        //when
+        // when
         MenuItemResponseDto result = menuItemService.create(menuItemRequestDto);
-        //then
+        // then
         assertNotNull(result);
         assertEquals(menuItemResponseDto.getId(), result.getId());
         assertEquals(menuItemResponseDto.getName(), result.getName());
-
         // interaction verification
+        verify(menuRepository).findById(menuId);
         verify(menuItemMapper).toEntity(menuItemRequestDto);
         verify(menuItemRepository).save(menuItem);
         verify(menuItemMapper).toDto(menuItem);
+        // check that menu is correctly set
+        assertEquals(menu, menuItem.getMenu(), "Menu should be set on MenuItem");
     }
 
     @Test
     void createMenuItem_RepositoryException() {
-        //given
+        // given
+        Integer menuId = menuItem.getMenu().getId();
+        menuItemRequestDto.setMenuId(menuId);
+        Menu menu = menuItem.getMenu();
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
         when(menuItemMapper.toEntity(menuItemRequestDto)).thenReturn(menuItem);
         when(menuItemRepository.save(menuItem)).thenThrow(new RuntimeException("Database error"));
-        //when&then
-        assertThrows(RuntimeException.class, () -> {
+        // when & then
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             menuItemService.create(menuItemRequestDto);
         });
+        assertEquals("Database error", exception.getMessage());
+        // verify interactions
+        verify(menuRepository).findById(menuId);
+        verify(menuItemMapper).toEntity(menuItemRequestDto);
+        verify(menuItemRepository).save(menuItem);
     }
 
     //find all tests

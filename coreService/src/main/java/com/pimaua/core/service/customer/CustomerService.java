@@ -89,7 +89,7 @@ public class CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Customer not found with id={}", id);
-                    return new CustomerNotFoundException("Customer not found");
+                    return new CustomerNotFoundException("Customer not found with ID " + id);
                 });
         customerRepository.delete(customer);
     }

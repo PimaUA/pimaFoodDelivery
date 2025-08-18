@@ -60,7 +60,7 @@ public class MenuItemService {
     public MenuItem getMenuItemById(Integer id) {
         return menuItemRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("Order not found with id={}", id);
+                    logger.error("MenuItem not found with id={}", id);
                     return new MenuItemNotFoundException("MenuItem not found with ID " + id);
                 });
     }
@@ -68,7 +68,7 @@ public class MenuItemService {
     public MenuItemResponseDto update(Integer id, MenuItemRequestDto menuItemRequestDto) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("Order not found with id={}", id);
+                    logger.error("MenuItem not found with id={}", id);
                     return new MenuItemNotFoundException("MenuItem not found with ID " + id);
                 });
         menuItemMapper.updateEntity(menuItem, menuItemRequestDto);
@@ -79,7 +79,7 @@ public class MenuItemService {
     public void delete(Integer id) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> {
-            logger.error("Order not found with id={}", id);
+            logger.error("MenuItem not found with id={}", id);
             return new MenuItemNotFoundException("MenuItem not found with ID " + id);
         });
         menuItemRepository.delete(menuItem);

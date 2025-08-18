@@ -158,13 +158,15 @@ class OrderServiceTest {
 
     @Test
     void update_Success() {
+        //given
         when(orderRepository.findById(1)).thenReturn(Optional.of(order));
-        when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
+        //when
         OrderResponseDto result = orderService.update(1, orderUpdateDto);
+        //then
         assertNotNull(result);
         verify(orderMapper).updateEntity(order, orderUpdateDto);
-        verify(orderRepository).save(order);
+        verify(orderRepository, never()).save(any());
     }
 
     @Test
