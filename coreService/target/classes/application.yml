@@ -1,0 +1,39 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: "coreservice"
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/coreservicedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    baseline-on-migrate: true
+    connect-retries: 5
+
+  cloud:
+    stream:
+      function:
+        definition: orderStatus
+      bindings:
+        orderStatus-in-0: #consumer binding
+          destination: send-status
+          group: ${spring.application.name}
+          content-type: application/json
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 10s

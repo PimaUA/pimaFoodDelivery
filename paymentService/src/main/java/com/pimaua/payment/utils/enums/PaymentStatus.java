@@ -1,0 +1,7 @@
+package com.pimaua.payment.utils.enums;
+
+public enum PaymentStatus {
+    REQUIRES_PAYMENT_METHOD, REQUIRES_CONFIRMATION, PROCESSING,
+    REQUIRES_ACTION, REQUIRES_CAPTURE, UNKNOWN, FAILED,
+    CANCELED, SUCCEEDED;
+}

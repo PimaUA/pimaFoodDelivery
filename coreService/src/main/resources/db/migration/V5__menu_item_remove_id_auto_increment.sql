@@ -1,0 +1,3 @@
+ALTER TABLE menu_item
+MODIFY COLUMN id INT NOT NULL;
+
