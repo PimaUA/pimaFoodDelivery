@@ -20,3 +20,33 @@ spring:
     validate-on-migrate: true
     baseline-on-migrate: true
     connect-retries: 5
+
+# feign to be removed when deploy to k8s
+  cloud:
+    openfeign:
+      client:
+        config:
+          order-service:
+            url: http://localhost:8081
+
+    stream:
+      bindings:
+        orderStatus-out-0:   # producer binding
+          destination: send-status
+          content-type: application/json
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 10s
+
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+
+
+
+

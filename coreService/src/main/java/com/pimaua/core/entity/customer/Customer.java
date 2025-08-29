@@ -1,5 +1,6 @@
 package com.pimaua.core.entity.customer;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;

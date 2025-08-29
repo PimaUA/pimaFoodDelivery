@@ -21,3 +21,19 @@ spring:
     baseline-on-migrate: true
     connect-retries: 5
 
+  cloud:
+    stream:
+      function:
+        definition: orderStatus
+      bindings:
+        orderStatus-in-0: #consumer binding
+          destination: send-status
+          group: ${spring.application.name}
+          content-type: application/json
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 10s

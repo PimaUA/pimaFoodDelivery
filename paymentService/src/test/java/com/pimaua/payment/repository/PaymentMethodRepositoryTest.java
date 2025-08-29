@@ -17,7 +17,7 @@ public class PaymentMethodRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void saveAndFindPaymentMethod(){
-        PaymentMethod paymentMethod=PaymentMethod.builder()
+        PaymentMethod paymentMethod= PaymentMethod.builder()
                 .userId(1)
                 .stripePaymentMethodId("123")
                 .type("Credit Card")

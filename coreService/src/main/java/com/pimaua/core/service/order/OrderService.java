@@ -91,6 +91,16 @@ public class OrderService {
         return orderMapper.toDto(order);
     }
 
+    public void updateOrderStatus(Integer orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> {
+                    logger.error("Order not found with id={}", orderId);
+                    return new OrderNotFoundException("Order not found with ID " + orderId);
+                });
+        order.setOrderStatus(status);
+        orderRepository.save(order);
+    }
+
     public OrderResponseDto recalculateTotalPrice(Integer orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> {

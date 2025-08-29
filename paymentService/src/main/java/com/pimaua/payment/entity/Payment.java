@@ -1,8 +1,10 @@
 package com.pimaua.payment.entity;
 
-import com.pimaua.payment.entity.enums.PaymentStatus;
+import com.pimaua.payment.utils.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,11 +28,14 @@ public class Payment {
     @Column(nullable = false)
     private String currency;
     @Column(name = "status",nullable = false)
+    @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
     @Column(name = "stripe_payment_intent_id",nullable = false)
-    private String stripePaymentIntentId;
+    private String paymentIntentId;
     @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
