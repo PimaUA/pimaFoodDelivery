@@ -16,19 +16,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @Tag(
         name = "CRUD REST APIs for MenuItem",
         description = "CRUD REST APIs for MenuItem inside CoreService for CREATE,UPDATE,FETCH,DELETE menuItem details"
 )
 @RestController
-@RequestMapping(path="api/menu-items", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Validated
 public class MenuItemController {
@@ -63,10 +66,11 @@ public class MenuItemController {
             )
     }
     )
-    @PostMapping
+    @PostMapping("/admin/menu/{menuId}/items")
     public ResponseEntity<ResponseDto<MenuItemResponseDto>>
-    createMenuItem(@Valid @RequestBody MenuItemRequestDto menuItemRequestDto) {
-        MenuItemResponseDto menuItemResponseDto = menuItemService.create(menuItemRequestDto);
+    createMenuItem(@PathVariable Integer menuId,
+                   @Valid @RequestBody MenuItemRequestDto menuItemRequestDto) {
+        MenuItemResponseDto menuItemResponseDto = menuItemService.create(menuId, menuItemRequestDto);
         return ResponseBuilder.buildResponse(ResponseType.CREATED, EntityType.MENUITEM, menuItemResponseDto);
     }
 
@@ -91,9 +95,13 @@ public class MenuItemController {
             )
     }
     )
-    @GetMapping
-    public ResponseEntity<ResponseDto<List<MenuItemResponseDto>>> findAllMenuItems() {
-        List<MenuItemResponseDto> menuItemsList = menuItemService.findAll();
+    @GetMapping("/menu/{menuId}/items")
+    public ResponseEntity<ResponseDto<Page<MenuItemResponseDto>>> findAllMenuItems
+            (@PathVariable Integer menuId,
+             @RequestParam(defaultValue = "true") boolean available,
+             @RequestParam(required = false) String name,
+             @PageableDefault(page = 0, size = 10, sort = {"price", "name"}, direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<MenuItemResponseDto> menuItemsList = menuItemService.findAllByMenuId(menuId, pageable, name, available);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.MENUITEM, menuItemsList);
     }
 
@@ -126,7 +134,7 @@ public class MenuItemController {
             )
     }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/item/{id}")
     public ResponseEntity<ResponseDto<MenuItemResponseDto>> findMenuItem(@PathVariable Integer id) {
         MenuItemResponseDto menuItemResponseDto = menuItemService.findById(id);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.MENUITEM, menuItemResponseDto);
@@ -161,7 +169,7 @@ public class MenuItemController {
             )
     }
     )
-    @PutMapping("/{id}")
+    @PutMapping("/item/{id}")
     public ResponseEntity<ResponseDto<MenuItemResponseDto>>
     updateMenuItem(@PathVariable Integer id, @Valid @RequestBody MenuItemRequestDto menuItemRequestDto) {
         MenuItemResponseDto menuItemResponseDto = menuItemService.update(id, menuItemRequestDto);
@@ -197,7 +205,7 @@ public class MenuItemController {
             )
     }
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/item/{id}")
     public ResponseEntity<ResponseDto<MenuItemResponseDto>> deleteMenuItem(@PathVariable Integer id) {
         menuItemService.delete(id);
         return ResponseBuilder.buildResponse(ResponseType.DELETED, EntityType.MENUITEM, null);

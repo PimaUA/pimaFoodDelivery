@@ -19,7 +19,7 @@ public class MenuItemRequestDto {
     private String name;
     private String description;
     @NotNull
-    @Positive
+    @Positive(message = "Price must be greater than 0")
     private BigDecimal price;
     private Boolean isAvailable;
     @NotNull

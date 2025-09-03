@@ -16,19 +16,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(
         name = "CRUD REST APIs for Menu",
         description = "CRUD REST APIs for Menu inside CoreService for CREATE,UPDATE,FETCH,DELETE menu details"
 )
 @RestController
-@RequestMapping(path="/api/menus", produces= MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Validated
 public class MenuController {
@@ -63,10 +65,11 @@ public class MenuController {
             )
     }
     )
-    @PostMapping
+    @PostMapping("/admin/restaurants/{restaurantId}/menu")
     public ResponseEntity<ResponseDto<MenuResponseDto>>
-    createMenu(@Valid @RequestBody MenuRequestDto menuRequestDto) {
-        MenuResponseDto menuResponseDto = menuService.create(menuRequestDto);
+    createMenu(@PathVariable Integer restaurantId,
+               @Valid @RequestBody MenuRequestDto menuRequestDto) {
+        MenuResponseDto menuResponseDto = menuService.create(restaurantId, menuRequestDto);
         return ResponseBuilder.buildResponse(ResponseType.CREATED, EntityType.MENU, menuResponseDto);
     }
 
@@ -91,9 +94,12 @@ public class MenuController {
             )
     }
     )
-    @GetMapping
-    public ResponseEntity<ResponseDto<List<MenuResponseDto>>> findAllMenus() {
-        List<MenuResponseDto> menusList = menuService.findAll();
+    @GetMapping("restaurants/{id}/menu")
+    public ResponseEntity<ResponseDto<Page<MenuResponseDto>>> findAllMenusForRestaurant
+            (@PathVariable Integer id,
+             @RequestParam(defaultValue = "true") boolean active,
+             @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<MenuResponseDto> menusList = menuService.findAllByRestaurantId(id, active, pageable);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.MENU, menusList);
     }
 
@@ -126,7 +132,7 @@ public class MenuController {
             )
     }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/menu/{id}")
     public ResponseEntity<ResponseDto<MenuResponseDto>> findMenu(@PathVariable Integer id) {
         MenuResponseDto menuResponseDto = menuService.findById(id);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.MENU, menuResponseDto);
@@ -161,7 +167,7 @@ public class MenuController {
             )
     }
     )
-    @PutMapping("/{id}")
+    @PutMapping("/menu/{id}")
     public ResponseEntity<ResponseDto<MenuResponseDto>>
     updateMenu(@PathVariable Integer id, @Valid @RequestBody MenuRequestDto menuRequestDto) {
         MenuResponseDto menuResponseDto = menuService.update(id, menuRequestDto);
@@ -197,7 +203,7 @@ public class MenuController {
             )
     }
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/menu/{id}")
     public ResponseEntity<ResponseDto<MenuResponseDto>> deleteMenu(@PathVariable Integer id) {
         menuService.delete(id);
         return ResponseBuilder.buildResponse(ResponseType.DELETED, EntityType.MENU, null);

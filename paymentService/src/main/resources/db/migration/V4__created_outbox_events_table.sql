@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS outbox_events(
+id INT AUTO_INCREMENT PRIMARY KEY,
+aggregate_type VARCHAR(50) NOT NULL,
+aggregate_id VARCHAR(50) NOT NULL,
+order_status VARCHAR(50),
+payload TEXT,
+processed BOOLEAN DEFAULT FALSE,
+retry_count INTEGER DEFAULT 0,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

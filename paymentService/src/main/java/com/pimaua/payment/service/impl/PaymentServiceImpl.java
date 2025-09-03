@@ -1,17 +1,21 @@
 package com.pimaua.payment.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pimaua.payment.client.OrderServiceClient;
 import com.pimaua.payment.dto.OrderForPaymentDto;
+import com.pimaua.payment.dto.OrderStatusUpdateMessage;
 import com.pimaua.payment.dto.PaymentCreateDto;
+import com.pimaua.payment.entity.OutboxEvent;
 import com.pimaua.payment.entity.Payment;
-import com.pimaua.payment.exception.custom.OrderNotFoundException;
-import com.pimaua.payment.exception.custom.PaymentNotFoundException;
-import com.pimaua.payment.exception.custom.PaymentProcessingException;
-import com.pimaua.payment.exception.custom.ServiceClientException;
+import com.pimaua.payment.exception.custom.*;
+import com.pimaua.payment.mapper.OrderStatusMapper;
 import com.pimaua.payment.mapper.StripePaymentStatusMapper;
+import com.pimaua.payment.repository.OutboxEventRepository;
 import com.pimaua.payment.repository.PaymentRepository;
 import com.pimaua.payment.service.PaymentService;
+import com.pimaua.payment.service.events.OutboxEventFactory;
 import com.pimaua.payment.utils.StripeAmountConverter;
+import com.pimaua.payment.utils.enums.OrderStatus;
 import com.pimaua.payment.utils.enums.PaymentStatus;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
@@ -27,8 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
+    private final OutboxEventRepository outboxEventRepository;
     private final OrderServiceClient orderServiceClient;
     private final StripePaymentStatusMapper stripePaymentStatusMapper;
+    private final ObjectMapper objectMapper;
     private final static Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     public PaymentIntent createPaymentIntent(PaymentCreateDto paymentCreateDto, Integer orderId) {
@@ -78,7 +84,7 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception exception) {
             logger.error("Unexpected error during payment creation for orderId={}", orderId, exception);
             throw new PaymentProcessingException(
-                    String.format("Payment processing failed (%s): %s",
+                    java.lang.String.format("Payment processing failed (%s): %s",
                             exception.getClass().getSimpleName(),
                             exception.getMessage())
             );
@@ -86,14 +92,24 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Transactional
-    public Payment updatePaymentStatus(String paymentIntentId, PaymentStatus status) {
+    public Payment updatePaymentStatusAndCreateOutbox(String paymentIntentId,
+                                                      PaymentStatus paymentStatus, Integer orderId) {
         Payment payment = paymentRepository.findByPaymentIntentId(paymentIntentId)
                 .orElseThrow(() -> {
                     logger.error("Payment not found with paymentIntentId={}", paymentIntentId);
                     return new PaymentNotFoundException("Order not found with paymentIntentId " + paymentIntentId);
                 });
-        payment.setPaymentStatus(status);
-        return paymentRepository.save(payment);
+        payment.setPaymentStatus(paymentStatus);
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        OrderStatus orderStatus = OrderStatusMapper.mapPaymentStatusToOrderStatus(paymentStatus);
+
+        OrderStatusUpdateMessage message = new OrderStatusUpdateMessage(orderId,
+                orderStatus);
+        OutboxEvent outboxEvent = OutboxEventFactory.createOrderOutboxEvent(orderId, message, orderStatus, objectMapper);
+        outboxEventRepository.save(outboxEvent);
+
+        return updatedPayment;
     }
 
     @Transactional

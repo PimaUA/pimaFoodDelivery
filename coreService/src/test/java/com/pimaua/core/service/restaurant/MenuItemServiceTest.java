@@ -97,7 +97,7 @@ public class MenuItemServiceTest {
         when(menuItemRepository.save(menuItem)).thenReturn(menuItem);
         when(menuItemMapper.toDto(menuItem)).thenReturn(menuItemResponseDto);
         // when
-        MenuItemResponseDto result = menuItemService.create(menuItemRequestDto);
+        MenuItemResponseDto result = menuItemService.create(menuId,menuItemRequestDto);
         // then
         assertNotNull(result);
         assertEquals(menuItemResponseDto.getId(), result.getId());
@@ -122,7 +122,7 @@ public class MenuItemServiceTest {
         when(menuItemRepository.save(menuItem)).thenThrow(new RuntimeException("Database error"));
         // when & then
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            menuItemService.create(menuItemRequestDto);
+            menuItemService.create(menuId,menuItemRequestDto);
         });
         assertEquals("Database error", exception.getMessage());
         // verify interactions
@@ -138,9 +138,9 @@ public class MenuItemServiceTest {
         List<MenuItem> menuItems = Arrays.asList(menuItem);
         List<MenuItemResponseDto> responseDtos = Arrays.asList(menuItemResponseDto);
         when(menuItemRepository.findAll()).thenReturn(menuItems);
-        when(menuItemMapper.toListDto(menuItems)).thenReturn(responseDtos);
+        when(menuItemMapper.toPageDto(menuItems)).thenReturn(responseDtos);
         //when
-        List<MenuItemResponseDto> result = menuItemService.findAll();
+        List<MenuItemResponseDto> result = menuItemService.findAllByMenuId();
         //then
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -153,9 +153,9 @@ public class MenuItemServiceTest {
         List<MenuItem> emptyMenuItems = List.of();
         List<MenuItemResponseDto> emptyDtos = List.of();
         when(menuItemRepository.findAll()).thenReturn(emptyMenuItems);
-        when(menuItemMapper.toListDto(emptyMenuItems)).thenReturn(emptyDtos);
+        when(menuItemMapper.toPageDto(emptyMenuItems)).thenReturn(emptyDtos);
         // When
-        List<MenuItemResponseDto> result = menuItemService.findAll();
+        List<MenuItemResponseDto> result = menuItemService.findAllByMenuId();
         // Then
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -272,6 +272,6 @@ public class MenuItemServiceTest {
     //edge cases
     @Test
     void createMenuItem_NullInput_ThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> menuItemService.create(null));
+        assertThrows(IllegalArgumentException.class, () -> menuItemService.create(1,null));
     }
 }

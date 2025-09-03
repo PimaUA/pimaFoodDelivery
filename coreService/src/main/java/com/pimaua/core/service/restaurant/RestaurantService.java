@@ -2,7 +2,9 @@ package com.pimaua.core.service.restaurant;
 
 import com.pimaua.core.dto.restaurant.RestaurantRequestDto;
 import com.pimaua.core.dto.restaurant.RestaurantResponseDto;
+import com.pimaua.core.entity.restaurant.Menu;
 import com.pimaua.core.entity.restaurant.Restaurant;
+import com.pimaua.core.exception.ActiveMenuConflictException;
 import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.restaurant.RestaurantMapper;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
@@ -65,6 +67,14 @@ public class RestaurantService {
                     logger.error("Restaurant not found with id={}", id);
                     return new RestaurantNotFoundException("Restaurant not found with ID " + id);
                 });
-        restaurantRepository.delete(restaurant);
+        if (!hasActiveMenu(restaurant)) {
+            restaurantRepository.delete(restaurant);
+        } else {
+            throw new ActiveMenuConflictException("Cannot delete restaurant with active menus");
+        }
+    }
+
+    private boolean hasActiveMenu(Restaurant restaurant) {
+        return restaurant.getMenus().stream().anyMatch(Menu::getIsActive);
     }
 }

@@ -3,7 +3,6 @@ package com.pimaua.core.messaging.consumer;
 import com.pimaua.core.entity.enums.OrderStatus;
 import com.pimaua.core.exception.custom.notfound.OrderNotFoundException;
 import com.pimaua.core.messaging.dto.OrderStatusUpdateMessage;
-import com.pimaua.core.messaging.mapper.OrderStatusMapper;
 import com.pimaua.core.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -23,7 +22,7 @@ public class OrderStatusConsumer {
     public Consumer<OrderStatusUpdateMessage> orderStatus() {
         return message -> {
             try {
-                OrderStatus status = OrderStatusMapper.mapMessageStatusToOrderStatus(message.getStatus());
+                OrderStatus status = message.getStatus();
                 orderService.updateOrderStatus(message.getOrderId(), status);
             } catch (IllegalArgumentException illegalArgumentException) {
                 logger.warn("Invalid status '{}' in message: {}", message.getStatus(), message);

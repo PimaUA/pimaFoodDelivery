@@ -1,11 +1,8 @@
 package com.pimaua.payment.service.impl;
 
-import com.pimaua.payment.controller.StripeWebhookController;
-import com.pimaua.payment.dto.OrderStatusUpdateMessage;
 import com.pimaua.payment.exception.custom.MissingMetaDataException;
-import com.pimaua.payment.mapper.OrderStatusMapper;
 import com.pimaua.payment.service.PaymentService;
-import com.pimaua.payment.service.ProcessedEventService;
+import com.pimaua.payment.service.events.ProcessedEventService;
 import com.pimaua.payment.service.StripeWebhookService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
@@ -32,7 +29,7 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
     private final ProcessedEventService processedEventService;
     private final PaymentService paymentService;
     private final StreamBridge streamBridge;
-    private static final Logger logger = LoggerFactory.getLogger(StripeWebhookController.class);
+    private static final Logger logger = LoggerFactory.getLogger(StripeWebhookServiceImpl.class);
 
     public ResponseEntity<String> handleStripeEvent(String payload,
                                                     String sigHeader) {
@@ -67,12 +64,12 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         switch (event.getType()) {
             case "payment_intent.succeeded":
                 if (stripeObject instanceof PaymentIntent paymentIntent) {
-                    handlePaymentIntentSucceeded(paymentIntent,event);
+                    handlePaymentIntentSucceeded(paymentIntent);
                 }
                 break;
             case "payment_intent.payment_failed":
                 if (stripeObject instanceof PaymentIntent paymentIntent) {
-                    handlePaymentIntentFailed(paymentIntent,event);
+                    handlePaymentIntentFailed(paymentIntent, event);
                 }
                 break;
             default:
@@ -81,44 +78,25 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         }
     }
 
-    private void handlePaymentIntentSucceeded(PaymentIntent paymentIntent,Event event) {
+    private void handlePaymentIntentSucceeded(PaymentIntent paymentIntent) {
         logger.info("Payment for {} succeeded.", paymentIntent.getAmount());
-
-        // update payment DB
-        paymentService.updatePaymentStatus(paymentIntent.getId(), SUCCEEDED);
-
-        //map Stripe event → order status
-        String status = OrderStatusMapper.mapStripeEventToOrderStatus(event);
-
-        //publish event to RabbitMq
         String orderIdStr = paymentIntent.getMetadata().get("order_id");
-        if(orderIdStr==null){
+        if (orderIdStr == null) {
             throw new MissingMetaDataException("Missing orderId in PaymentIntent metadata");
         }
-        Integer orderId=Integer.valueOf(orderIdStr);
-        var message = new OrderStatusUpdateMessage(orderId, status);
+        Integer orderId = Integer.valueOf(orderIdStr);
 
-        boolean sent = streamBridge.send("orderStatus-out-0", message);
-        logger.info("Published order update to RabbitMQ: {}, success={}", message, sent);
+        paymentService.updatePaymentStatusAndCreateOutbox(paymentIntent.getId(), SUCCEEDED, orderId);
     }
 
     private void handlePaymentIntentFailed(PaymentIntent paymentIntent, Event event) {
         logger.info("Payment failed");
-        //update payment DB
-        paymentService.updatePaymentStatus(paymentIntent.getId(), FAILED);
-
-        //map Stripe event → order status
-        String status = OrderStatusMapper.mapStripeEventToOrderStatus(event);
-
-        //publish event to RabbitMq
-        String orderIdStr = paymentIntent.getMetadata().get("orderId");
-        if(orderIdStr==null){
+        String orderIdStr = paymentIntent.getMetadata().get("order_id");
+        if (orderIdStr == null) {
             throw new MissingMetaDataException("Missing orderId in PaymentIntent metadata");
         }
-        Integer orderId=Integer.valueOf(orderIdStr);
-        var message = new OrderStatusUpdateMessage(orderId, status);
+        Integer orderId = Integer.valueOf(orderIdStr);
 
-        streamBridge.send("orderStatus-out-0", message);
-        logger.info("Published order update to RabbitMQ: {}", message);
+        paymentService.updatePaymentStatusAndCreateOutbox(paymentIntent.getId(), FAILED, orderId);
     }
 }

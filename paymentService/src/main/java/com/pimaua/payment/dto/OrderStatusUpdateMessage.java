@@ -1,5 +1,6 @@
 package com.pimaua.payment.dto;
 
+import com.pimaua.payment.utils.enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,5 +12,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class OrderStatusUpdateMessage {
     private Integer orderId;
-    private String status;
+    private OrderStatus status;
 }

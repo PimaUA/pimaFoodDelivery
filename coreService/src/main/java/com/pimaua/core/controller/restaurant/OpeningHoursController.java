@@ -29,7 +29,7 @@ import java.util.List;
                 "for CREATE,UPDATE,FETCH,DELETE opening hours details"
 )
 @RestController
-@RequestMapping(path = "/api/opening-hours", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Validated
 public class OpeningHoursController {
@@ -64,16 +64,18 @@ public class OpeningHoursController {
             )
     }
     )
-    @PostMapping
+    @PostMapping("admin/restaurants/{id}/opening-hours")
     public ResponseEntity<ResponseDto<OpeningHoursResponseDto>>
-    createOpeningHours(@Valid @RequestBody OpeningHoursRequestDto openingHoursRequestDto) {
-        OpeningHoursResponseDto openingHoursResponseDto = openingHoursService.create(openingHoursRequestDto);
+    createOpeningHours(@PathVariable Integer id,
+            @Valid @RequestBody OpeningHoursRequestDto openingHoursRequestDto) {
+        OpeningHoursResponseDto openingHoursResponseDto = openingHoursService
+                .create(id, openingHoursRequestDto);
         return ResponseBuilder.buildResponse(ResponseType.CREATED, EntityType.OPENINGHOURS, openingHoursResponseDto);
     }
 
     @Operation(
             summary = "Fetch OpeningHours Details REST API",
-            description = "REST API to fetch all OpeningHours details available"
+            description = "REST API to fetch all OpeningHours details for specific Restaurant"
     )
     @ApiResponses({
             @ApiResponse(
@@ -92,9 +94,10 @@ public class OpeningHoursController {
             )
     }
     )
-    @GetMapping
-    public ResponseEntity<ResponseDto<List<OpeningHoursResponseDto>>> findAllOpeningHours() {
-        List<OpeningHoursResponseDto> openingHoursList = openingHoursService.findAll();
+    @GetMapping("/restaurants/{id}/opening-hours")
+    public ResponseEntity<ResponseDto<List<OpeningHoursResponseDto>>> findAllOpeningHoursForRestaurant
+            (@PathVariable Integer id) {
+        List<OpeningHoursResponseDto> openingHoursList = openingHoursService.findByRestaurantId(id);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.OPENINGHOURS, openingHoursList);
     }
 
@@ -127,7 +130,7 @@ public class OpeningHoursController {
             )
     }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/opening-hours/{id}")
     public ResponseEntity<ResponseDto<OpeningHoursResponseDto>> findOpeningHours(@PathVariable Integer id) {
         OpeningHoursResponseDto openingHoursResponseDto = openingHoursService.findById(id);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.OPENINGHOURS, openingHoursResponseDto);
@@ -162,7 +165,7 @@ public class OpeningHoursController {
             )
     }
     )
-    @PutMapping("/{id}")
+    @PutMapping("/opening-hours/{id}")
     public ResponseEntity<ResponseDto<OpeningHoursResponseDto>>
     updateOpeningHours(@PathVariable Integer id, @Valid @RequestBody OpeningHoursRequestDto openingHoursRequestDto) {
         OpeningHoursResponseDto openingHoursResponseDto = openingHoursService.update(id, openingHoursRequestDto);
@@ -198,7 +201,7 @@ public class OpeningHoursController {
             )
     }
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/opening-hours/{id}")
     public ResponseEntity<ResponseDto<OpeningHoursResponseDto>> deleteOpeningHours(@PathVariable Integer id) {
         openingHoursService.delete(id);
         return ResponseBuilder.buildResponse(ResponseType.DELETED, EntityType.OPENINGHOURS, null);

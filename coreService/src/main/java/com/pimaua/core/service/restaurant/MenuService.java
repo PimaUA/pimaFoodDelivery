@@ -13,12 +13,13 @@ import com.pimaua.core.repository.restaurant.MenuRepository;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,15 +32,15 @@ public class MenuService {
     private final RestaurantRepository restaurantRepository;
     private static final Logger logger = LoggerFactory.getLogger(MenuService.class);
 
-    public MenuResponseDto create(MenuRequestDto menuRequestDto) {
+    public MenuResponseDto create(Integer restaurantId, MenuRequestDto menuRequestDto) {
         if (menuRequestDto == null) {
             logger.error("Failed to create Menu, no input");
             throw new IllegalArgumentException("MenuRequestDto cannot be null");
         }
-        Restaurant restaurant = restaurantRepository.findById(menuRequestDto.getRestaurantId())
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> {
-                    logger.error("Restaurant not found with id={}", menuRequestDto.getRestaurantId());
-                    return new MenuItemNotFoundException("Restaurant not found with ID " + menuRequestDto.getRestaurantId());
+                    logger.error("Restaurant not found with id={}", restaurantId);
+                    return new MenuItemNotFoundException("Restaurant not found with ID " + restaurantId);
                 });
         Menu menu = menuMapper.toEntity(menuRequestDto);
         menu.setRestaurant(restaurant);
@@ -50,9 +51,13 @@ public class MenuService {
     }
 
     @Transactional(readOnly = true)
-    public List<MenuResponseDto> findAll() {
-        List<Menu> menus = menuRepository.findAll();
-        return menuMapper.toListDto(menus);
+    public Page<MenuResponseDto> findAllByRestaurantId(Integer restaurantId, boolean active, Pageable pageable) {
+        Page<Menu> menus = menuRepository.findByRestaurantIdAndIsActiveTrue(restaurantId,pageable);
+        if (menus.isEmpty()) {
+            logger.error("No active menus found for restaurantId={}", restaurantId);
+            throw new MenuNotFoundException("No active menus found for restaurant ID " + restaurantId);
+        }
+        return menuMapper.toPageDto(menus);
     }
 
     @Transactional(readOnly = true)

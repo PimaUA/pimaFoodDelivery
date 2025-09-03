@@ -8,5 +8,6 @@ import com.stripe.model.PaymentIntent;
 public interface PaymentService {
     PaymentIntent createPaymentIntent(PaymentCreateDto paymentCreateDto, Integer orderId);
 
-    Payment updatePaymentStatus(String paymentIntentId, PaymentStatus status);
+    Payment updatePaymentStatusAndCreateOutbox(String paymentIntentId,
+                                               PaymentStatus status, Integer orderId);
 }

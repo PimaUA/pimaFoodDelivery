@@ -1,4 +1,4 @@
-package com.pimaua.payment.service;
+package com.pimaua.payment.service.events;
 
 import com.pimaua.payment.entity.ProcessedEvent;
 import com.pimaua.payment.repository.ProcessedEventRepository;

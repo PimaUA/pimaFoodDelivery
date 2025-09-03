@@ -29,7 +29,7 @@ import java.util.List;
 )
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path = "/api/restaurants", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
 public class RestaurantController {
     private final RestaurantService restaurantService;
@@ -63,7 +63,7 @@ public class RestaurantController {
             )
     }
     )
-    @PostMapping
+    @PostMapping("/admin/restaurants")
     public ResponseEntity<ResponseDto<RestaurantResponseDto>>
     createRestaurant(@Valid @RequestBody RestaurantRequestDto restaurantRequestDto) {
         RestaurantResponseDto restaurantResponseDto = restaurantService.create(restaurantRequestDto);
@@ -91,7 +91,7 @@ public class RestaurantController {
             )
     }
     )
-    @GetMapping
+    @GetMapping("/restaurants")
     public ResponseEntity<ResponseDto<List<RestaurantResponseDto>>> findAllRestaurants() {
         List<RestaurantResponseDto> restaurantsList = restaurantService.findAll();
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.RESTAURANT, restaurantsList);
@@ -126,7 +126,7 @@ public class RestaurantController {
             )
     }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/restaurants/{id}")
     public ResponseEntity<ResponseDto<RestaurantResponseDto>> findRestaurant(@PathVariable Integer id) {
         RestaurantResponseDto restaurantResponseDto = restaurantService.findById(id);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.RESTAURANT, restaurantResponseDto);
@@ -161,7 +161,7 @@ public class RestaurantController {
             )
     }
     )
-    @PutMapping("/{id}")
+    @PutMapping("/admin/restaurants/{id}")
     public ResponseEntity<ResponseDto<RestaurantResponseDto>>
     updateRestaurant(@PathVariable Integer id, @Valid @RequestBody RestaurantRequestDto restaurantRequestDto) {
         RestaurantResponseDto restaurantResponseDto = restaurantService.update(id, restaurantRequestDto);
@@ -197,7 +197,7 @@ public class RestaurantController {
             )
     }
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/restaurants/{id}")
     public ResponseEntity<ResponseDto<RestaurantResponseDto>> deleteRestaurant(@PathVariable Integer id) {
         restaurantService.delete(id);
         return ResponseBuilder.buildResponse(ResponseType.DELETED, EntityType.RESTAURANT, null);

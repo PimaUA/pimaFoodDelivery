@@ -26,55 +26,63 @@ public class OpeningHoursService {
     private final OpeningHoursMapper openingHoursMapper;
     private static final Logger logger = LoggerFactory.getLogger(OpeningHoursService.class);
 
-    public OpeningHoursResponseDto create(OpeningHoursRequestDto openingHoursRequestDto) {
+    public OpeningHoursResponseDto create
+            (Integer restaurantId, OpeningHoursRequestDto openingHoursRequestDto) {
         if (openingHoursRequestDto == null) {
             logger.error("Failed to create OpeningHours, no input");
             throw new IllegalArgumentException("OpeningHoursRequestDto cannot be null");
         }
-        Restaurant restaurant = restaurantRepository.findById(openingHoursRequestDto.getRestaurantId())
-                .orElseThrow(() -> {
-                    logger.error("Restaurant not found with id={}", openingHoursRequestDto.getRestaurantId());
-                    return new RestaurantNotFoundException(
-                            "Restaurant not found with ID " + openingHoursRequestDto.getRestaurantId());
-                });
+        Restaurant restaurant = findRestaurantByIdOrThrow(restaurantId);
         OpeningHours openingHours = openingHoursMapper.toEntity(openingHoursRequestDto);
         openingHours.setRestaurant(restaurant);
         OpeningHours savedOpeningHours = openingHoursRepository.save(openingHours);
         return openingHoursMapper.toDto(savedOpeningHours);
     }
 
-    public List<OpeningHoursResponseDto> findAll() {
-        List<OpeningHours> openingHours = openingHoursRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<OpeningHoursResponseDto> findByRestaurantId
+            (Integer restaurantId) {
+        Restaurant restaurant = findRestaurantByIdOrThrow(restaurantId);
+        List<OpeningHours> openingHours = openingHoursRepository.findByRestaurantId(restaurantId);
         return openingHoursMapper.toListDto(openingHours);
     }
 
+    @Transactional(readOnly = true)
     public OpeningHoursResponseDto findById(Integer id) {
-        OpeningHours openingHours = openingHoursRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("OpeningHours not found with id={}", id);
-                    return new OpeningHoursNotFoundException("Opening hours not found with ID " + id);
-                });
-
+        OpeningHours openingHours = findOpeningHoursOrThrow(id);
         return openingHoursMapper.toDto(openingHours);
     }
 
     public OpeningHoursResponseDto update(Integer id, OpeningHoursRequestDto openingHoursRequestDto) {
-        OpeningHours openingHours = openingHoursRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("OpeningHours not found with id={}", id);
-                    return new OpeningHoursNotFoundException("Opening hours not found with ID " + id);
-                });
+        if (openingHoursRequestDto == null) {
+            logger.error("Failed to update OpeningHours, no input");
+            throw new IllegalArgumentException("OpeningHoursRequestDto cannot be null");
+        }
+        OpeningHours openingHours = findOpeningHoursOrThrow(id);
         openingHoursMapper.updateEntity(openingHours, openingHoursRequestDto);
         OpeningHours savedOpeningHours = openingHoursRepository.save(openingHours);
         return openingHoursMapper.toDto(savedOpeningHours);
     }
 
     public void delete(Integer id) {
-        OpeningHours openingHours = openingHoursRepository.findById(id)
+        OpeningHours openingHours = findOpeningHoursOrThrow(id);
+        openingHoursRepository.delete(openingHours);
+    }
+
+    private Restaurant findRestaurantByIdOrThrow(Integer restaurantId) {
+        return restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> {
+                    logger.error("Restaurant not found with id={}", restaurantId);
+                    return new RestaurantNotFoundException(
+                            "Restaurant not found with ID " + restaurantId);
+                });
+    }
+
+    private OpeningHours findOpeningHoursOrThrow(Integer id) {
+        return openingHoursRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("OpeningHours not found with id={}", id);
                     return new OpeningHoursNotFoundException("Opening hours not found with ID " + id);
                 });
-        openingHoursRepository.delete(openingHours);
     }
 }

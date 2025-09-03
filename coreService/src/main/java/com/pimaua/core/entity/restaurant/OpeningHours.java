@@ -26,7 +26,7 @@ public class OpeningHours {
     private LocalTime opensAt;
     @Column(name = "closes_at")
     private LocalTime closesAt;
-    @Column(name = "is_24_hours",columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(name = "is_24_hours",nullable = false)
     @Builder.Default
     private Boolean is24Hours=false;
     @ManyToOne(fetch = FetchType.LAZY)

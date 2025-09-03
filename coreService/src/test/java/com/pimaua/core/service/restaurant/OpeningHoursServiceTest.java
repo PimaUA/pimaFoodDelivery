@@ -93,7 +93,7 @@ public class OpeningHoursServiceTest {
         when(openingHoursRepository.save(openingHours)).thenReturn(openingHours);
         when(openingHoursMapper.toDto(openingHours)).thenReturn(openingHoursResponseDto);
         //when
-        OpeningHoursResponseDto result = openingHoursService.create(openingHoursRequestDto);
+        OpeningHoursResponseDto result = openingHoursService.create(1, openingHoursRequestDto);
         //then
         assertNotNull(result);
         assertEquals(openingHoursResponseDto.getId(), result.getId());
@@ -113,36 +113,40 @@ public class OpeningHoursServiceTest {
         when(openingHoursRepository.save(openingHours)).thenThrow(new RuntimeException("Database error"));
         //when&then
         assertThrows(RuntimeException.class, () -> {
-            openingHoursService.create(openingHoursRequestDto);
+            openingHoursService.create(1, openingHoursRequestDto);
         });
     }
 
     //find all tests
     @Test
-    void findAll_Success() {
-        //given
-        List<OpeningHours> openingHoursList = Arrays.asList(openingHours);
-        List<OpeningHoursResponseDto> responseDtos = Arrays.asList(openingHoursResponseDto);
-        when(openingHoursRepository.findAll()).thenReturn(openingHoursList);
+    void findByRestaurantId_Success() {
+        // given
+        Integer restaurantId = 1;
+        List<OpeningHours> openingHoursList = List.of(openingHours);
+        List<OpeningHoursResponseDto> responseDtos = List.of(openingHoursResponseDto);
+        when(openingHoursRepository.findByRestaurantId(restaurantId)).thenReturn(openingHoursList);
         when(openingHoursMapper.toListDto(openingHoursList)).thenReturn(responseDtos);
-        //when
-        List<OpeningHoursResponseDto> result = openingHoursService.findAll();
-        //then
+        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+        // when
+        List<OpeningHoursResponseDto> result = openingHoursService.findByRestaurantId(restaurantId);
+        // then
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(responseDtos, result);
     }
 
     @Test
-    void findAll_EmptyList() {
-        // Given
-        List<OpeningHours> emptyMenuItems = List.of();
+    void findByRestaurantId_EmptyList() {
+        // given
+        Integer restaurantId = 1;
+        List<OpeningHours> emptyList = List.of();
         List<OpeningHoursResponseDto> emptyDtos = List.of();
-        when(openingHoursRepository.findAll()).thenReturn(emptyMenuItems);
-        when(openingHoursMapper.toListDto(emptyMenuItems)).thenReturn(emptyDtos);
-        // When
-        List<OpeningHoursResponseDto> result = openingHoursService.findAll();
-        // Then
+        when(openingHoursRepository.findByRestaurantId(restaurantId)).thenReturn(emptyList);
+        when(openingHoursMapper.toListDto(emptyList)).thenReturn(emptyDtos);
+        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+        // when
+        List<OpeningHoursResponseDto> result = openingHoursService.findByRestaurantId(restaurantId);
+        // then
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
@@ -150,14 +154,18 @@ public class OpeningHoursServiceTest {
     //findById tests
     @Test
     void findById_Success() {
-        //given
-        when(openingHoursRepository.findById(2)).thenReturn(Optional.of(openingHours));
-        when(openingHoursMapper.toDto(openingHours)).thenReturn(openingHoursResponseDto);
-        //when
-        OpeningHoursResponseDto result = openingHoursService.findById(2);
-        //then
+        // given
+        Integer restaurantId = 1;
+        List<OpeningHours> emptyList = List.of();
+        List<OpeningHoursResponseDto> emptyDtos = List.of();
+        when(openingHoursRepository.findByRestaurantId(restaurantId)).thenReturn(emptyList);
+        when(openingHoursMapper.toListDto(emptyList)).thenReturn(emptyDtos);
+        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+        // when
+        List<OpeningHoursResponseDto> result = openingHoursService.findByRestaurantId(restaurantId);
+        // then
         assertNotNull(result);
-        assertEquals(openingHoursResponseDto, result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -253,6 +261,6 @@ public class OpeningHoursServiceTest {
     //edge cases
     @Test
     void createOpeningHours_NullInput_ThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> openingHoursService.create(null));
+        assertThrows(IllegalArgumentException.class, () -> openingHoursService.create(1,null));
     }
 }

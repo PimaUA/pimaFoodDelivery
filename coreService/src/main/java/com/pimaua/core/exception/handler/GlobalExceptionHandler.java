@@ -1,6 +1,8 @@
 package com.pimaua.core.exception.handler;
 
 import com.pimaua.core.dto.ErrorResponseDto;
+import com.pimaua.core.dto.FieldErrorDto;
+import com.pimaua.core.exception.ActiveMenuConflictException;
 import com.pimaua.core.exception.custom.notfound.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -12,31 +14,35 @@ import org.springframework.web.context.request.WebRequest;
 import org.hibernate.exception.ConstraintViolationException;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({CustomerNotFoundException.class, MenuNotFoundException.class, OpeningHoursNotFoundException.class,
-    OpeningHoursNotFoundException.class, OrderItemNotFoundException.class, OrderNotFoundException.class,
-    RestaurantNotFoundException.class})
+            OpeningHoursNotFoundException.class, OrderItemNotFoundException.class, OrderNotFoundException.class,
+            RestaurantNotFoundException.class})
     public ResponseEntity<ErrorResponseDto> handleNotFoundExceptions
             (Exception exception, WebRequest webRequest) {
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.NOT_FOUND)
                 .errorMessage(exception.getMessage())
+                .fieldErrors(Collections.emptyList())
                 .errorTimestamp(Instant.now())
                 .build();
         return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({IllegalArgumentException.class,IllegalStateException.class})
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<ErrorResponseDto>
-    handleBadRequest(IllegalArgumentException illegalArgumentException,WebRequest webRequest) {
+    handleBadRequest( RuntimeException ex, WebRequest webRequest) {
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.BAD_REQUEST)
-                .errorMessage(illegalArgumentException.getMessage())
+                .errorMessage(ex.getMessage())
+                .fieldErrors(Collections.emptyList())
                 .errorTimestamp(Instant.now())
                 .build();
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
@@ -46,22 +52,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleValidationExceptions(
             MethodArgumentNotValidException ex, WebRequest webRequest) {
 
-        // Collect all field errors into a single message
-        StringBuilder errorMessage = new StringBuilder();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errorMessage.append(error.getField())
-                        .append(": ")
-                        .append(error.getDefaultMessage())
-                        .append("; ")
-        );
+        List<FieldErrorDto> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> new FieldErrorDto(error.getField(), error.getDefaultMessage()))
+                .toList();
 
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.BAD_REQUEST)
-                .errorMessage(errorMessage.toString())
+                .errorMessage("Validation failed")
+                .fieldErrors(fieldErrors)
                 .errorTimestamp(Instant.now())
                 .build();
-
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 
@@ -72,11 +75,25 @@ public class GlobalExceptionHandler {
         if (ex.getCause() instanceof ConstraintViolationException) {
             message = "Phone number already exists";
         }
-
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.CONFLICT)
                 .errorMessage(message)
+                .fieldErrors(Collections.emptyList())
+                .errorTimestamp(Instant.now())
+                .build();
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ActiveMenuConflictException.class)
+    public ResponseEntity<ErrorResponseDto> handleDeleteWithActiveMenu
+            (ActiveMenuConflictException activeMenuConflictException,
+             WebRequest webRequest) {
+        ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
+                .path(webRequest.getDescription(false).replace("uri=", ""))
+                .errorCode(HttpStatus.CONFLICT)
+                .errorMessage(activeMenuConflictException.getMessage())
+                .fieldErrors(Collections.emptyList())
                 .errorTimestamp(Instant.now())
                 .build();
         return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
@@ -88,6 +105,7 @@ public class GlobalExceptionHandler {
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.INTERNAL_SERVER_ERROR)
                 .errorMessage(exception.getMessage())
+                .fieldErrors(Collections.emptyList())
                 .errorTimestamp(Instant.now())
                 .build();
         return new ResponseEntity<>(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);

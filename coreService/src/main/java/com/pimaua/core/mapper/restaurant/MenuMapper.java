@@ -7,8 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MenuMapper {
@@ -19,5 +18,7 @@ public interface MenuMapper {
     @Mapping(target = "id", ignore = true)
     void updateEntity(@MappingTarget Menu menu, MenuRequestDto menuRequestDto);
 
-    List<MenuResponseDto> toListDto(List<Menu> menus);
+    default Page<MenuResponseDto> toPageDto(Page<Menu> menus) {
+        return menus.map(this::toDto);
+    }
 }

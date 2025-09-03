@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.http.HttpStatusCode;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,4 +16,5 @@ public class ErrorResponseDto {
     private HttpStatusCode errorCode;
     private  String errorMessage;
     private Instant errorTimestamp;
+    private List<FieldErrorDto> fieldErrors;
 }

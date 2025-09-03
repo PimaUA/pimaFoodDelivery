@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -105,7 +109,7 @@ public class MenuServiceTest {
         when(menuMapper.toDto(menu)).thenReturn(menuResponseDto);
 
         // when
-        MenuResponseDto result = menuService.create(menuRequestDto);
+        MenuResponseDto result = menuService.create(1,menuRequestDto);
 
         // then
         assertNotNull(result);
@@ -128,38 +132,35 @@ public class MenuServiceTest {
         when(menuRepository.save(menu)).thenThrow(new RuntimeException("Database error"));
         //when&then
         assertThrows(RuntimeException.class, () -> {
-            menuService.create(menuRequestDto);
+            menuService.create(1,menuRequestDto);
         });
     }
 
-    //find all tests
     @Test
     void findAll_Success() {
-        //given
-        List<Menu> menus = Arrays.asList(menu);
-        List<MenuResponseDto> responseDtos = Arrays.asList(menuResponseDto);
-        when(menuRepository.findAll()).thenReturn(menus);
-        when(menuMapper.toListDto(menus)).thenReturn(responseDtos);
-        //when
-        List<MenuResponseDto> result = menuService.findAll();
-        //then
+        // given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Menu> menus = new PageImpl<>(List.of(menu), pageable, 1);
+        Page<MenuResponseDto> responseDtos = new PageImpl<>(List.of(menuResponseDto), pageable, 1);
+        when(menuRepository.findByRestaurantIdAndIsActiveTrue(1, pageable)).thenReturn(menus);
+        when(menuMapper.toPageDto(menus)).thenReturn(responseDtos);
+        // when
+        Page<MenuResponseDto> result = menuService.findAllByRestaurantId(1, true, pageable);
+        // then
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
         assertEquals(responseDtos, result);
     }
 
     @Test
-    void findAll_EmptyList() {
-        // Given
-        List<Menu> emptyMenus = List.of();
-        List<MenuResponseDto> emptyDtos = List.of();
-        when(menuRepository.findAll()).thenReturn(emptyMenus);
-        when(menuMapper.toListDto(emptyMenus)).thenReturn(emptyDtos);
-        // When
-        List<MenuResponseDto> result = menuService.findAll();
-        // Then
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+    void findAll_NoResults_ThrowsException() {
+        // given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Menu> emptyMenus = Page.empty(pageable);
+        when(menuRepository.findByRestaurantIdAndIsActiveTrue(1, pageable)).thenReturn(emptyMenus);
+        // when & then
+        assertThrows(MenuNotFoundException.class,
+                () -> menuService.findAllByRestaurantId(1, true, pageable));
     }
 
     //findById tests
@@ -278,6 +279,6 @@ public class MenuServiceTest {
     //edge cases
     @Test
     void createMenu_NullInput_ThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> menuService.create(null));
+        assertThrows(IllegalArgumentException.class, () -> menuService.create(1,null));
     }
 }
