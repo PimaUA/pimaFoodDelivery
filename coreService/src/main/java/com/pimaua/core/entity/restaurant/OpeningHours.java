@@ -26,9 +26,9 @@ public class OpeningHours {
     private LocalTime opensAt;
     @Column(name = "closes_at")
     private LocalTime closesAt;
-    @Column(name = "is_24_hours",nullable = false)
+    @Column(name = "is_24_hours", nullable = false)
     @Builder.Default
-    private Boolean is24Hours=false;
+    private Boolean is24Hours = false;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;

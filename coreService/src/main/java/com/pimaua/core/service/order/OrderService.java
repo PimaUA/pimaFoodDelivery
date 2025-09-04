@@ -4,19 +4,29 @@ import com.pimaua.core.dto.order.*;
 import com.pimaua.core.entity.enums.OrderStatus;
 import com.pimaua.core.entity.order.Order;
 import com.pimaua.core.entity.order.OrderItem;
+import com.pimaua.core.exception.InvalidOrderStatusTransitionException;
+import com.pimaua.core.exception.NotUpdatedOrderStatusException;
+import com.pimaua.core.exception.OrderDeletionNotAllowedException;
 import com.pimaua.core.exception.custom.notfound.OrderNotFoundException;
 import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.order.OrderMapper;
 import com.pimaua.core.repository.order.OrderRepository;
+import com.pimaua.core.repository.order.spec.OrderSpecs;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -80,25 +90,43 @@ public class OrderService {
         return orderMapper.toDto(order);
     }
 
-    public OrderResponseDto update(Integer id, OrderUpdateDto orderUpdateDto) {
+    public OrderResponseDto updateOrderLocations(Integer id, OrderUpdateDto orderUpdateDto) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Order not found with id={}", id);
                     return new OrderNotFoundException("Order not found with ID " + id);
                 });
-        orderMapper.updateEntity(order, orderUpdateDto);
-        //Order savedOrder = orderRepository.save(order);
+        if (order.getOrderStatus().equals(OrderStatus.PENDING)) {
+            orderMapper.updateEntity(order, orderUpdateDto);
+            orderRepository.save(order);
+        } else {
+            throw new NotUpdatedOrderStatusException("Only orders with PENDING status can be updated");
+        }
         return orderMapper.toDto(order);
     }
 
-    public void updateOrderStatus(Integer orderId, OrderStatus status) {
+    public OrderResponseDto updateOrderStatus(Integer orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> {
                     logger.error("Order not found with id={}", orderId);
                     return new OrderNotFoundException("Order not found with ID " + orderId);
                 });
-        order.setOrderStatus(status);
+        OrderStatus currentStatus = order.getOrderStatus();
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new InvalidOrderStatusTransitionException(String.format
+                    ("Cannot transition from %s to %s", currentStatus, newStatus));
+        }
+        order.setOrderStatus(newStatus);
         orderRepository.save(order);
+        return orderMapper.toDto(order);
+    }
+
+    public Page<OrderResponseDto> findOrdersByUserId(Integer userId, OrderStatus orderStatus,
+                                                     LocalDate from, LocalDate to, Pageable pageable) {
+
+        Specification<Order> spec = buildOrderSpecification(userId, orderStatus, from, to);
+        Page<Order> orders = orderRepository.findAll(spec, pageable);
+        return orderMapper.toPageDto(orders);
     }
 
     public OrderResponseDto recalculateTotalPrice(Integer orderId) {
@@ -115,11 +143,39 @@ public class OrderService {
         return orderMapper.toDto(order);
     }
 
-    public void delete(Integer id) {
-        int deletedCount = orderRepository.deleteOrderById(id);
-        if (deletedCount == 0) {
-            logger.error("Order not found with id={}", id);
-            throw new OrderNotFoundException("Order not found with ID " + id);
+    public void deleteOrder(Integer id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Order not found with id={}", id);
+                    return new OrderNotFoundException("Order not found with ID " + id);
+                });
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING)) {
+            throw new OrderDeletionNotAllowedException("Cannot delete order with status: " + order.getOrderStatus());
         }
+        orderRepository.delete(order);
+    }
+
+    private Specification<Order> buildOrderSpecification(Integer userId,
+                                                         OrderStatus orderStatus,
+                                                         LocalDate from,
+                                                         LocalDate to) {
+        //Validation
+        if (from != null && to != null) {
+            if (from.isAfter(to)) {
+                throw new IllegalArgumentException("`from` must be before or equal to `to`");
+            }
+            if (ChronoUnit.DAYS.between(from, to) > 93) {
+                throw new IllegalArgumentException("Date range cannot exceed 93 days");
+            }
+        }
+        //Convert LocalDate → LocalDateTime
+        LocalDateTime fromDateTime = from != null ? from.atStartOfDay() : LocalDateTime.MIN;
+        LocalDateTime toDateTime = to != null ? to.atTime(LocalTime.MAX) : LocalDateTime.MAX;
+        //Build Specification
+        return Specification.allOf(
+                OrderSpecs.hasUserId(userId),
+                OrderSpecs.hasOrderStatus(orderStatus),
+                OrderSpecs.createdFromTo(fromDateTime, toDateTime)
+        );
     }
 }

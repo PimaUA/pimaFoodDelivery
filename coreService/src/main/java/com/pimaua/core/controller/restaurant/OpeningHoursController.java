@@ -97,7 +97,7 @@ public class OpeningHoursController {
     @GetMapping("/restaurants/{id}/opening-hours")
     public ResponseEntity<ResponseDto<List<OpeningHoursResponseDto>>> findAllOpeningHoursForRestaurant
             (@PathVariable Integer id) {
-        List<OpeningHoursResponseDto> openingHoursList = openingHoursService.findByRestaurantId(id);
+        List<OpeningHoursResponseDto> openingHoursList = openingHoursService.findAllOpeningHoursByRestaurantId(id);
         return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.OPENINGHOURS, openingHoursList);
     }
 

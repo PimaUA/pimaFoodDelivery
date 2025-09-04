@@ -49,9 +49,7 @@ public class MenuItemService {
         if (name != null && !name.isEmpty()) {
             spec = spec.and(MenuItemSpecs.hasNameContaining(name));
         }
-
         spec = spec.and(MenuItemSpecs.isAvailable(available));
-
         Page<MenuItem> menuItems = menuItemRepository.findAll(spec, pageable);
         return menuItemMapper.toPageDto(menuItems);
     }

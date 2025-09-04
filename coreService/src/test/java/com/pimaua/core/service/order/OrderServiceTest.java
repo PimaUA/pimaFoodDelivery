@@ -185,14 +185,14 @@ class OrderServiceTest {
     @Test
     void delete_ShouldRemove_Success() {
         when(orderRepository.deleteOrderById(1)).thenReturn(1);
-        orderService.delete(1);
+        orderService.deleteOrder(1);
         verify(orderRepository).deleteOrderById(1);
     }
 
     @Test
     void delete_OrderNotFound() {
         when(orderRepository.deleteOrderById(1)).thenReturn(0);
-        assertThrows(OrderNotFoundException.class, () -> orderService.delete(1));
+        assertThrows(OrderNotFoundException.class, () -> orderService.deleteOrder(1));
     }
 
     @Test

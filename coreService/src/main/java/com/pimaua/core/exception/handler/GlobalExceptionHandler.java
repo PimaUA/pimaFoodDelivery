@@ -3,6 +3,9 @@ package com.pimaua.core.exception.handler;
 import com.pimaua.core.dto.ErrorResponseDto;
 import com.pimaua.core.dto.FieldErrorDto;
 import com.pimaua.core.exception.ActiveMenuConflictException;
+import com.pimaua.core.exception.InvalidOrderStatusTransitionException;
+import com.pimaua.core.exception.NotUpdatedOrderStatusException;
+import com.pimaua.core.exception.OrderDeletionNotAllowedException;
 import com.pimaua.core.exception.custom.notfound.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -37,7 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<ErrorResponseDto>
-    handleBadRequest( RuntimeException ex, WebRequest webRequest) {
+    handleBadRequest(RuntimeException ex, WebRequest webRequest) {
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.BAD_REQUEST)
@@ -85,14 +88,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(ActiveMenuConflictException.class)
+    @ExceptionHandler({ActiveMenuConflictException.class, InvalidOrderStatusTransitionException.class,
+            NotUpdatedOrderStatusException.class, OrderDeletionNotAllowedException.class})
     public ResponseEntity<ErrorResponseDto> handleDeleteWithActiveMenu
-            (ActiveMenuConflictException activeMenuConflictException,
+            (RuntimeException exception,
              WebRequest webRequest) {
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.CONFLICT)
-                .errorMessage(activeMenuConflictException.getMessage())
+                .errorMessage(exception.getMessage())
                 .fieldErrors(Collections.emptyList())
                 .errorTimestamp(Instant.now())
                 .build();

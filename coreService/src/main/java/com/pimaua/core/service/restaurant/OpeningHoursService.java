@@ -40,10 +40,10 @@ public class OpeningHoursService {
     }
 
     @Transactional(readOnly = true)
-    public List<OpeningHoursResponseDto> findByRestaurantId
+    public List<OpeningHoursResponseDto> findAllOpeningHoursByRestaurantId
             (Integer restaurantId) {
         Restaurant restaurant = findRestaurantByIdOrThrow(restaurantId);
-        List<OpeningHours> openingHours = openingHoursRepository.findByRestaurantId(restaurantId);
+        List<OpeningHours> openingHours = openingHoursRepository.findByRestaurantIdOrderByDayOfWeekAsc(restaurantId);
         return openingHoursMapper.toListDto(openingHours);
     }
 

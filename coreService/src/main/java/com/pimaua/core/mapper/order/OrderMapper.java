@@ -4,10 +4,8 @@ import com.pimaua.core.dto.order.OrderCreateDto;
 import com.pimaua.core.dto.order.OrderResponseDto;
 import com.pimaua.core.dto.order.OrderUpdateDto;
 import com.pimaua.core.entity.order.Order;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -18,7 +16,12 @@ public interface OrderMapper {
     Order toEntity(OrderCreateDto orderCreateDto);
 
     @Mapping(target = "id", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(@MappingTarget Order existingOrder, OrderUpdateDto orderUpdateDto);
 
     List<OrderResponseDto> toListDto(List<Order>orderList);
+
+    default Page<OrderResponseDto> toPageDto(Page<Order>orderList){
+        return orderList.map(this::toDto);
+    };
 }
