@@ -22,6 +22,4 @@ public class MenuItemRequestDto {
     @Positive(message = "Price must be greater than 0")
     private BigDecimal price;
     private Boolean isAvailable;
-    @NotNull
-    private Integer menuId;
 }

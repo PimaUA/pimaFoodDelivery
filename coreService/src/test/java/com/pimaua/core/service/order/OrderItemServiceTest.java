@@ -7,6 +7,7 @@ import com.pimaua.core.entity.order.Order;
 import com.pimaua.core.entity.order.OrderItem;
 import com.pimaua.core.entity.restaurant.MenuItem;
 import com.pimaua.core.exception.custom.notfound.OrderItemNotFoundException;
+import com.pimaua.core.exception.custom.notfound.OrderNotFoundException;
 import com.pimaua.core.mapper.order.OrderItemMapper;
 import com.pimaua.core.repository.order.OrderItemRepository;
 import com.pimaua.core.repository.order.OrderRepository;
@@ -139,6 +140,25 @@ class OrderItemServiceTest {
     }
 
     @Test
+    void addItemToExistingOrder_OrderNotFound() {
+        when(orderRepository.findById(123)).thenReturn(Optional.empty());
+        assertThrows(OrderNotFoundException.class,
+                () -> orderItemService.addItemToExistingOrder(123, orderItemRequestDto));
+        verify(orderRepository).findById(123);
+        verifyNoInteractions(orderItemMapper);
+    }
+
+    @Test
+    void addItemToExistingOrder_OrderNotPending() {
+        order.setOrderStatus(OrderStatus.DELIVERED);
+        when(orderRepository.findById(100)).thenReturn(Optional.of(order));
+        assertThrows(IllegalStateException.class,
+                () -> orderItemService.addItemToExistingOrder(100, orderItemRequestDto));
+        verify(orderRepository).findById(100);
+        verifyNoInteractions(orderItemMapper);
+    }
+
+    @Test
     void findAll_Success() {
         // Given
         List<OrderItem> orderItems = Arrays.asList(existingOrderItem);
@@ -252,6 +272,16 @@ class OrderItemServiceTest {
     }
 
     @Test
+    void update_OrderNotPending() {
+        existingOrderItem.getOrder().setOrderStatus(OrderStatus.DELIVERED);
+        when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
+        assertThrows(IllegalStateException.class,
+                () -> orderItemService.update(1, orderItemRequestDto));
+        verify(orderItemRepository).findById(1);
+        verifyNoInteractions(orderItemMapper);
+    }
+
+    @Test
     void delete_Success() {
         // Given
         order.getOrderItems().add(existingOrderItem);
@@ -283,6 +313,18 @@ class OrderItemServiceTest {
     }
 
     @Test
+    void delete_OrderNotPending() {
+        order.getOrderItems().add(existingOrderItem);
+        existingOrderItem.setOrder(order);
+        order.setOrderStatus(OrderStatus.DELIVERED);
+        when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
+
+        assertThrows(IllegalStateException.class, () -> orderItemService.delete(1));
+        verify(orderItemRepository).findById(1);
+        verifyNoInteractions(orderRepository);
+    }
+
+    @Test
     void testBuildOrderItem() {
         // Given
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
@@ -296,6 +338,14 @@ class OrderItemServiceTest {
         verify(menuItemService).getMenuItemById(1);
         verify(orderItemMapper).toEntity(orderItemRequestDto, menuItem,
                 BigDecimal.valueOf(10.00), BigDecimal.valueOf(20.00));
+    }
+
+    @Test
+    void buildOrderItemForOrder_InvalidQuantity() {
+        orderItemRequestDto.setQuantity(0);
+        assertThrows(IllegalArgumentException.class,
+                () -> orderItemService.buildOrderItemForOrder(orderItemRequestDto));
+        verifyNoInteractions(orderItemMapper);
     }
 
     @Test

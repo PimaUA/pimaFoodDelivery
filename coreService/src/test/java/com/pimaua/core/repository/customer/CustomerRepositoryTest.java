@@ -23,8 +23,14 @@ public class CustomerRepositoryTest extends BaseRepositoryTest {
 
         Customer savedCustomer = customerRepository.save(customer);
 
+        // Test findByPhoneNumber
         Optional<Customer> foundCustomer = customerRepository.findByPhoneNumber("123456");
         assertTrue(foundCustomer.isPresent());
         assertEquals("John", foundCustomer.get().getName());
+
+        // Test findByName
+        Optional<Customer> foundByName = customerRepository.findByName("John");
+        assertTrue(foundByName.isPresent());
+        assertEquals("123456", foundByName.get().getPhoneNumber());
     }
 }

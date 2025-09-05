@@ -6,6 +6,7 @@ import com.pimaua.core.dto.enums.EntityType;
 import com.pimaua.core.dto.enums.ResponseType;
 import com.pimaua.core.dto.restaurant.OpeningHoursRequestDto;
 import com.pimaua.core.dto.restaurant.OpeningHoursResponseDto;
+import com.pimaua.core.dto.restaurant.OpeningHoursUpdateDto;
 import com.pimaua.core.service.restaurant.OpeningHoursService;
 import com.pimaua.core.utils.ResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,41 +103,6 @@ public class OpeningHoursController {
     }
 
     @Operation(
-            summary = "Fetch specific OpeningHours Details REST API",
-            description = "REST API to fetch specific OpeningHours details using Id"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "HTTP Status OK"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "HTTP Status NOT FOUND",
-                    content = @Content(
-                            schema = @Schema(
-                                    implementation = ErrorResponseDto.class
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "HTTP Status Internal Server Error",
-                    content = @Content(
-                            schema = @Schema(
-                                    implementation = ErrorResponseDto.class
-                            )
-                    )
-            )
-    }
-    )
-    @GetMapping("/opening-hours/{id}")
-    public ResponseEntity<ResponseDto<OpeningHoursResponseDto>> findOpeningHours(@PathVariable Integer id) {
-        OpeningHoursResponseDto openingHoursResponseDto = openingHoursService.findById(id);
-        return ResponseBuilder.buildResponse(ResponseType.SUCCESS, EntityType.OPENINGHOURS, openingHoursResponseDto);
-    }
-
-    @Operation(
             summary = "Update specific OpeningHours Details REST API",
             description = "REST API to update specific OpeningHours details using Id"
     )
@@ -167,8 +133,8 @@ public class OpeningHoursController {
     )
     @PutMapping("/opening-hours/{id}")
     public ResponseEntity<ResponseDto<OpeningHoursResponseDto>>
-    updateOpeningHours(@PathVariable Integer id, @Valid @RequestBody OpeningHoursRequestDto openingHoursRequestDto) {
-        OpeningHoursResponseDto openingHoursResponseDto = openingHoursService.update(id, openingHoursRequestDto);
+    updateOpeningHours(@PathVariable Integer id, @Valid @RequestBody OpeningHoursUpdateDto openingHoursUpdateDto) {
+        OpeningHoursResponseDto openingHoursResponseDto = openingHoursService.update(id, openingHoursUpdateDto);
         return ResponseBuilder.buildResponse(ResponseType.UPDATED, EntityType.OPENINGHOURS, openingHoursResponseDto);
     }
 

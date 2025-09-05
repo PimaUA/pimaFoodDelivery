@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -178,41 +177,6 @@ public class OrderController {
 
     @Operation(
             summary = "Partial update specific Order Details REST API",
-            description = "REST API to recalculate Total price for order"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "HTTP Status OK"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "HTTP Status NOT FOUND",
-                    content = @Content(
-                            schema = @Schema(
-                                    implementation = ErrorResponseDto.class
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "HTTP Status Internal Server Error",
-                    content = @Content(
-                            schema = @Schema(
-                                    implementation = ErrorResponseDto.class
-                            )
-                    )
-            )
-    }
-    )
-    @PatchMapping("/{id}/price")
-    public ResponseEntity<ResponseDto<OrderResponseDto>> recalculateOrderTotalPrice(@PathVariable Integer id) {
-        OrderResponseDto orderResponseDto = orderService.recalculateTotalPrice(id);
-        return ResponseBuilder.buildResponse(ResponseType.UPDATED, EntityType.ORDER, orderResponseDto);
-    }
-
-    @Operation(
-            summary = "Partial update specific Order Details REST API",
             description = "REST API to update pickup & dropOff parameters"
     )
     @ApiResponses({
@@ -294,7 +258,7 @@ public class OrderController {
             )
     }
     )
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/admin/{id}/status")
     public ResponseEntity<ResponseDto<OrderResponseDto>> updateOrderStatus(@PathVariable Integer id,
                                                                            @RequestParam OrderStatus status) {
         OrderResponseDto orderResponseDto = orderService.updateOrderStatus(id, status);

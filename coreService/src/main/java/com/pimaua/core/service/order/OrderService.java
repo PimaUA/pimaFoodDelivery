@@ -135,6 +135,7 @@ public class OrderService {
                     logger.error("Order not found with id={}", orderId);
                     return new OrderNotFoundException("Order not found with ID " + orderId);
                 });
+
         BigDecimal newTotal = order.calculateTotalPrice();
         if (order.getTotalPrice() == null || order.getTotalPrice().compareTo(newTotal) != 0) {
             order.setTotalPrice(newTotal);

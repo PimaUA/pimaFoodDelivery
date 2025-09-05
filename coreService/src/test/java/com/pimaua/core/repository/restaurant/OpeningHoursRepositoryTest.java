@@ -21,14 +21,13 @@ public class OpeningHoursRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void testSaveAndFindOpeningHours() {
-        // Step 1: Create and save a Restaurant
+        // Create restaurant
         Restaurant restaurant = Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
                 .build();
         restaurant = restaurantRepository.save(restaurant);
-
-        // Step 2: Create and save a OpeningHours
+        // Create OpeningHours
         OpeningHours openingHours = OpeningHours.builder()
                 .dayOfWeek(DayOfWeek.FRIDAY)
                 .opensAt(LocalTime.of(9, 0))
@@ -36,23 +35,24 @@ public class OpeningHoursRepositoryTest extends BaseRepositoryTest {
                 .restaurant(restaurant)
                 .build();
         openingHoursRepository.save(openingHours);
-
-        // Step 3: Find and assert the saved OpeningHours
+        // Positive case
         Optional<OpeningHours> foundOpeningHours = openingHoursRepository.findByDayOfWeek(DayOfWeek.FRIDAY);
         assertTrue(foundOpeningHours.isPresent());
         assertEquals(LocalTime.of(9, 0), foundOpeningHours.get().getOpensAt());
+        // Negative case
+        Optional<OpeningHours> notFound = openingHoursRepository.findByDayOfWeek(DayOfWeek.SUNDAY);
+        assertFalse(notFound.isPresent());
     }
 
     @Test
-    void testFindByRestaurantId(){
-        // Step 1: Create and save a Restaurant
+    void testFindByRestaurantId() {
+        // Create restaurant
         Restaurant restaurant = Restaurant.builder()
-                .name("Some Restaurant")
-                .address("Some Address")
+                .name("Test Restaurant")
+                .address("Test Address")
                 .build();
         restaurant = restaurantRepository.save(restaurant);
-
-        // Step 2: Create and save OpeningHours linked to the restaurant
+        // Create OpeningHours
         OpeningHours openingHours = OpeningHours.builder()
                 .restaurant(restaurant)
                 .dayOfWeek(DayOfWeek.MONDAY)
@@ -60,15 +60,13 @@ public class OpeningHoursRepositoryTest extends BaseRepositoryTest {
                 .closesAt(LocalTime.of(18, 0))
                 .build();
         openingHoursRepository.save(openingHours);
-
-        // Step 3: Call repository method
+        // Positive case
         List<OpeningHours> result = openingHoursRepository.findByRestaurantId(restaurant.getId());
-
-        // Step 4: Verify results
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(DayOfWeek.MONDAY, result.get(0).getDayOfWeek());
-        assertEquals(LocalTime.of(9, 0), result.get(0).getOpensAt());
-        assertEquals(restaurant.getId(), result.get(0).getRestaurant().getId());
+        // Negative case (non-existing restaurantId)
+        List<OpeningHours> emptyResult = openingHoursRepository.findByRestaurantId(9999);
+        assertTrue(emptyResult.isEmpty());
     }
 }

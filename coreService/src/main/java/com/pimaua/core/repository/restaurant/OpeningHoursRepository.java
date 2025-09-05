@@ -13,6 +13,4 @@ public interface OpeningHoursRepository extends JpaRepository<OpeningHours, Inte
     Optional<OpeningHours>findByDayOfWeek(DayOfWeek dayOfWeek);
 
     List<OpeningHours>findByRestaurantId(Integer restaurantId);
-
-    List<OpeningHours> findByRestaurantIdOrderByDayOfWeekAsc(Integer restaurantId);
 }

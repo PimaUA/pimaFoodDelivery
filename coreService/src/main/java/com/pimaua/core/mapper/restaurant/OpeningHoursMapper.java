@@ -2,6 +2,7 @@ package com.pimaua.core.mapper.restaurant;
 
 import com.pimaua.core.dto.restaurant.OpeningHoursRequestDto;
 import com.pimaua.core.dto.restaurant.OpeningHoursResponseDto;
+import com.pimaua.core.dto.restaurant.OpeningHoursUpdateDto;
 import com.pimaua.core.entity.restaurant.OpeningHours;
 import org.mapstruct.*;
 
@@ -16,7 +17,7 @@ public interface OpeningHoursMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "restaurant", ignore = true)
-    void updateEntity(@MappingTarget OpeningHours openingHours, OpeningHoursRequestDto openingHoursRequestDto);
+    void updateEntity(@MappingTarget OpeningHours openingHours, OpeningHoursUpdateDto openingHoursUpdateDto);
 
     List<OpeningHoursResponseDto> toListDto(List<OpeningHours> openingHoursList);
 }

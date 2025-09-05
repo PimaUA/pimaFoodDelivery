@@ -15,10 +15,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +36,7 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class MenuItemServiceTest {
+
     @Mock
     private MenuItemRepository menuItemRepository;
     @Mock
@@ -48,7 +52,7 @@ public class MenuItemServiceTest {
     private MenuItemResponseDto menuItemResponseDto;
 
     @BeforeEach
-    void setup(){
+    void setup() {
         Restaurant restaurant = Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
@@ -59,7 +63,7 @@ public class MenuItemServiceTest {
                 .restaurant(restaurant)
                 .build();
 
-        menuItem =MenuItem.builder()
+        menuItem = MenuItem.builder()
                 .id(1)
                 .name("Water")
                 .description("Some water")
@@ -69,14 +73,14 @@ public class MenuItemServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        menuItemRequestDto =MenuItemRequestDto.builder()
+        menuItemRequestDto = MenuItemRequestDto.builder()
                 .name("Water")
                 .description("Some water")
                 .price(BigDecimal.valueOf(10.0))
                 .isAvailable(true)
                 .build();
 
-        menuItemResponseDto =MenuItemResponseDto.builder()
+        menuItemResponseDto = MenuItemResponseDto.builder()
                 .id(1)
                 .name("Water")
                 .description("Some water")
@@ -90,14 +94,13 @@ public class MenuItemServiceTest {
     void createMenuItem_Success() {
         // given
         Integer menuId = menuItem.getMenu().getId(); // assuming menu has an id
-        menuItemRequestDto.setMenuId(menuId);
         Menu menu = menuItem.getMenu(); // use the menu from setup
         when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
         when(menuItemMapper.toEntity(menuItemRequestDto)).thenReturn(menuItem);
         when(menuItemRepository.save(menuItem)).thenReturn(menuItem);
         when(menuItemMapper.toDto(menuItem)).thenReturn(menuItemResponseDto);
         // when
-        MenuItemResponseDto result = menuItemService.create(menuId,menuItemRequestDto);
+        MenuItemResponseDto result = menuItemService.create(menuId, menuItemRequestDto);
         // then
         assertNotNull(result);
         assertEquals(menuItemResponseDto.getId(), result.getId());
@@ -115,14 +118,13 @@ public class MenuItemServiceTest {
     void createMenuItem_RepositoryException() {
         // given
         Integer menuId = menuItem.getMenu().getId();
-        menuItemRequestDto.setMenuId(menuId);
         Menu menu = menuItem.getMenu();
         when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
         when(menuItemMapper.toEntity(menuItemRequestDto)).thenReturn(menuItem);
         when(menuItemRepository.save(menuItem)).thenThrow(new RuntimeException("Database error"));
         // when & then
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            menuItemService.create(menuId,menuItemRequestDto);
+            menuItemService.create(menuId, menuItemRequestDto);
         });
         assertEquals("Database error", exception.getMessage());
         // verify interactions
@@ -131,34 +133,44 @@ public class MenuItemServiceTest {
         verify(menuItemRepository).save(menuItem);
     }
 
-    //find all tests
+    @SuppressWarnings("unchecked")
     @Test
     void findAll_Success() {
-        //given
-        List<MenuItem> menuItems = Arrays.asList(menuItem);
-        List<MenuItemResponseDto> responseDtos = Arrays.asList(menuItemResponseDto);
-        when(menuItemRepository.findAll()).thenReturn(menuItems);
-        when(menuItemMapper.toPageDto(menuItems)).thenReturn(responseDtos);
-        //when
-        List<MenuItemResponseDto> result = menuItemService.findAllByMenuId();
-        //then
+        // given
+        Page<MenuItem> menuItemsPage = new PageImpl<>(List.of(menuItem));
+        Page<MenuItemResponseDto> responseDtosPage = new PageImpl<>(List.of(menuItemResponseDto));
+        when(menuItemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(menuItemsPage);
+        when(menuItemMapper.toPageDto(menuItemsPage)).thenReturn(responseDtosPage);
+        // when
+        Page<MenuItemResponseDto> result =
+                menuItemService.findAllByMenuId(1, Pageable.unpaged(), "Water", true);
+        // then
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(responseDtos, result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(menuItemResponseDto, result.getContent().get(0));
+
+        verify(menuItemRepository).findAll(any(Specification.class), any(Pageable.class));
+        verify(menuItemMapper).toPageDto(menuItemsPage);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void findAll_EmptyList() {
-        // Given
-        List<MenuItem> emptyMenuItems = List.of();
-        List<MenuItemResponseDto> emptyDtos = List.of();
-        when(menuItemRepository.findAll()).thenReturn(emptyMenuItems);
-        when(menuItemMapper.toPageDto(emptyMenuItems)).thenReturn(emptyDtos);
-        // When
-        List<MenuItemResponseDto> result = menuItemService.findAllByMenuId();
-        // Then
+        // given
+        Page<MenuItem> emptyMenuItemsPage = Page.empty();
+        Page<MenuItemResponseDto> emptyDtosPage = Page.empty();
+        when(menuItemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(emptyMenuItemsPage);
+        when(menuItemMapper.toPageDto(emptyMenuItemsPage)).thenReturn(emptyDtosPage);
+        // when
+        Page<MenuItemResponseDto> result =
+                menuItemService.findAllByMenuId(1, Pageable.unpaged(), null, true);
+        // then
         assertNotNull(result);
         assertTrue(result.isEmpty());
+        verify(menuItemRepository).findAll(any(Specification.class), any(Pageable.class));
+        verify(menuItemMapper).toPageDto(emptyMenuItemsPage);
     }
 
     //findById tests
@@ -207,7 +219,6 @@ public class MenuItemServiceTest {
     void updateMenuItem_MenuItemNotFound() {
         // Given
         when(menuItemRepository.findById(anyInt())).thenReturn(Optional.empty());
-
         // When & Then
         MenuItemNotFoundException exception = assertThrows(MenuItemNotFoundException.class, () -> {
             menuItemService.update(999, menuItemRequestDto);
@@ -231,10 +242,8 @@ public class MenuItemServiceTest {
     void deleteMenuItem_Success() {
         // Given
         when(menuItemRepository.findById(1)).thenReturn(Optional.of(menuItem));
-
         // When
         menuItemService.delete(1);
-
         // Then
         verify(menuItemRepository).findById(1);
         verify(menuItemRepository).delete(menuItem);
@@ -243,16 +252,14 @@ public class MenuItemServiceTest {
     @Test
     void deleteMenuItem_MenuItemNotFound() {
         // Given
-        when(menuItemRepository.findById(anyInt())).thenReturn(Optional.empty());
-
+        when(menuItemRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
         // When & Then
         MenuItemNotFoundException exception = assertThrows(MenuItemNotFoundException.class, () -> {
             menuItemService.delete(999);
         });
-
         assertEquals("MenuItem not found with ID 999", exception.getMessage());
         verify(menuItemRepository).findById(999);
-        verify(menuItemRepository, never()).delete(any());
+        verify(menuItemRepository, never()).delete(any(MenuItem.class));
     }
 
     @Test
@@ -272,6 +279,7 @@ public class MenuItemServiceTest {
     //edge cases
     @Test
     void createMenuItem_NullInput_ThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> menuItemService.create(1,null));
+        assertThrows(IllegalArgumentException.class, () -> menuItemService.create(1, null));
     }
 }
+

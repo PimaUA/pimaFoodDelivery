@@ -167,7 +167,7 @@ public class MenuController {
             )
     }
     )
-    @PutMapping("/menu/{id}")
+    @PutMapping("/admin/menu/{id}")
     public ResponseEntity<ResponseDto<MenuResponseDto>>
     updateMenu(@PathVariable Integer id, @Valid @RequestBody MenuRequestDto menuRequestDto) {
         MenuResponseDto menuResponseDto = menuService.update(id, menuRequestDto);
@@ -203,7 +203,7 @@ public class MenuController {
             )
     }
     )
-    @DeleteMapping("/menu/{id}")
+    @DeleteMapping("/admin/menu/{id}")
     public ResponseEntity<ResponseDto<MenuResponseDto>> deleteMenu(@PathVariable Integer id) {
         menuService.delete(id);
         return ResponseBuilder.buildResponse(ResponseType.DELETED, EntityType.MENU, null);

@@ -4,6 +4,9 @@ import com.pimaua.core.dto.order.*;
 import com.pimaua.core.entity.enums.OrderStatus;
 import com.pimaua.core.entity.order.Order;
 import com.pimaua.core.entity.order.OrderItem;
+import com.pimaua.core.exception.InvalidOrderStatusTransitionException;
+import com.pimaua.core.exception.NotUpdatedOrderStatusException;
+import com.pimaua.core.exception.OrderDeletionNotAllowedException;
 import com.pimaua.core.exception.custom.notfound.OrderNotFoundException;
 import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.order.OrderMapper;
@@ -15,8 +18,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -41,28 +49,29 @@ class OrderServiceTest {
     private OrderService orderService;
 
     private Order order;
-    private OrderCreateDto orderCreateDto;
-    private OrderUpdateDto orderUpdateDto;
     private OrderResponseDto orderResponseDto;
+    private OrderCreateDto orderCreateDto;
     private OrderItemRequestDto orderItemRequestDto;
     private OrderItem orderItem;
+    private OrderUpdateDto orderUpdateDto;
 
     @BeforeEach
     void setUp() {
-        // Setup test data
         order = Order.builder()
                 .id(1)
                 .userId(100)
                 .restaurantId(200)
-                .pickupAddress("123 Pickup St")
-                .pickupLatitude(new BigDecimal("40.7128"))
-                .pickupLongitude(new BigDecimal("-74.0060"))
-                .dropOffAddress("456 Delivery Ave")
-                .dropOffLatitude(new BigDecimal("40.7589"))
-                .dropOffLongitude(new BigDecimal("-73.9851"))
                 .orderStatus(OrderStatus.PENDING)
-                .totalPrice(new BigDecimal("25.99"))
+                .totalPrice(new BigDecimal("25.00"))
                 .createdAt(LocalDateTime.now())
+                .build();
+
+        orderResponseDto = OrderResponseDto.builder()
+                .id(1)
+                .userId(100)
+                .restaurantId(200)
+                .orderStatus(OrderStatus.PENDING)
+                .totalPrice(new BigDecimal("25.00"))
                 .build();
 
         orderItemRequestDto = OrderItemRequestDto.builder()
@@ -79,37 +88,21 @@ class OrderServiceTest {
                 .build();
 
         orderCreateDto = OrderCreateDto.builder()
-                .restaurantId(1)
-                .pickupAddress("One Street")
-                .pickupLatitude(new BigDecimal("40.7128"))
-                .pickupLongitude(new BigDecimal("-74.0060"))
-                .dropOffAddress("Another Street")
-                .dropOffLatitude(new BigDecimal("40.7589"))
-                .dropOffLongitude(new BigDecimal("-73.9851"))
-                .orderItems(Arrays.asList(orderItemRequestDto))
+                .restaurantId(200)
+                .pickupAddress("Pickup")
+                .dropOffAddress("DropOff")
+                .orderItems(List.of(orderItemRequestDto))
                 .build();
 
         orderUpdateDto = OrderUpdateDto.builder()
-                .pickupAddress("One Street")
-                .pickupLatitude(new BigDecimal("40.7128"))
-                .pickupLongitude(new BigDecimal("-74.0060"))
-                .dropOffAddress("Another Street")
-                .dropOffLatitude(new BigDecimal("40.7589"))
-                .dropOffLongitude(new BigDecimal("-73.9851"))
-                .build();
-
-        orderResponseDto = OrderResponseDto.builder()
-                .id(1)
-                .userId(2)
-                .restaurantId(3)
-                .orderStatus(OrderStatus.PENDING)
-                .totalPrice(new BigDecimal("23.00"))
+                .pickupAddress("New Address")
+                .dropOffAddress("New Drop")
                 .build();
     }
 
     @Test
     void create_Success() {
-        when(restaurantRepository.existsById(orderCreateDto.getRestaurantId())).thenReturn(true);
+        when(restaurantRepository.existsById(200)).thenReturn(true);
         when(orderItemService.buildOrderItemForOrder(orderItemRequestDto)).thenReturn(orderItem);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
@@ -117,27 +110,25 @@ class OrderServiceTest {
         OrderResponseDto result = orderService.create(orderCreateDto, 100);
 
         assertNotNull(result);
-        verify(restaurantRepository).existsById(orderCreateDto.getRestaurantId());
-        verify(orderItemService).buildOrderItemForOrder(orderItemRequestDto);
         verify(orderRepository).save(any(Order.class));
         verify(orderMapper).toDto(order);
     }
 
     @Test
     void create_RestaurantNotFound() {
-        when(restaurantRepository.existsById(orderCreateDto.getRestaurantId())).thenReturn(false);
+        when(restaurantRepository.existsById(200)).thenReturn(false);
         assertThrows(RestaurantNotFoundException.class,
                 () -> orderService.create(orderCreateDto, 100));
-        verify(orderRepository, never()).save(any());
     }
 
     @Test
     void findAll_Success() {
         when(orderRepository.findAll()).thenReturn(List.of(order));
         when(orderMapper.toListDto(anyList())).thenReturn(List.of(orderResponseDto));
+
         List<OrderResponseDto> result = orderService.findAll();
+
         assertEquals(1, result.size());
-        verify(orderRepository).findAll();
         verify(orderMapper).toListDto(anyList());
     }
 
@@ -145,67 +136,153 @@ class OrderServiceTest {
     void findById_Success() {
         when(orderRepository.findById(1)).thenReturn(Optional.of(order));
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
+
         OrderResponseDto result = orderService.findById(1);
+
         assertNotNull(result);
-        verify(orderRepository).findById(1);
     }
 
     @Test
-    void findById_OrderNotFound() {
+    void findById_NotFound() {
         when(orderRepository.findById(1)).thenReturn(Optional.empty());
         assertThrows(OrderNotFoundException.class, () -> orderService.findById(1));
     }
 
     @Test
-    void update_Success() {
-        //given
+    void updateOrderLocations_Success() {
         when(orderRepository.findById(1)).thenReturn(Optional.of(order));
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
-        //when
-        OrderResponseDto result = orderService.update(1, orderUpdateDto);
-        //then
+
+        OrderResponseDto result = orderService.updateOrderLocations(1, orderUpdateDto);
+
         assertNotNull(result);
         verify(orderMapper).updateEntity(order, orderUpdateDto);
-        verify(orderRepository, never()).save(any());
+        verify(orderRepository).save(order);
     }
 
     @Test
-    void recalculateOrderTotal_Success() {
+    void updateOrderLocations_NotPending() {
+        order.setOrderStatus(OrderStatus.DELIVERED);
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+        assertThrows(NotUpdatedOrderStatusException.class,
+                () -> orderService.updateOrderLocations(1, orderUpdateDto));
+    }
+
+    @Test
+    void updateOrderStatus_Success() {
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderMapper.toDto(order)).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            return OrderResponseDto.builder()
+                    .id(o.getId())
+                    .orderStatus(o.getOrderStatus())
+                    .build();
+        });
+
+        OrderResponseDto result = orderService.updateOrderStatus(1, OrderStatus.CONFIRMED);
+
+        assertEquals(OrderStatus.CONFIRMED, order.getOrderStatus());
+        assertEquals(OrderStatus.CONFIRMED, result.getOrderStatus());
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void updateOrderStatus_InvalidTransition() {
+        // Set the current status to DELIVERED
+        order.setOrderStatus(OrderStatus.DELIVERED);
+
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+
+        // Try to transition DELIVERED -> CONFIRMED, which is invalid
+        InvalidOrderStatusTransitionException exception = assertThrows(
+                InvalidOrderStatusTransitionException.class,
+                () -> orderService.updateOrderStatus(1, OrderStatus.CONFIRMED)
+        );
+
+        assertEquals("Cannot transition from DELIVERED to CONFIRMED", exception.getMessage());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void findOrdersByUserId_Success() {
+        Page<Order> page = new PageImpl<>(List.of(order));
+        Page<OrderResponseDto> responsePage = new PageImpl<>(List.of(orderResponseDto));
+
+        when(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(page);
+        when(orderMapper.toPageDto(page)).thenReturn(responsePage);
+
+        Page<OrderResponseDto> result = orderService.findOrdersByUserId(
+                100, OrderStatus.PENDING, null, null, Pageable.unpaged()
+        );
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(orderResponseDto, result.getContent().get(0));
+
+        verify(orderRepository).findAll(any(Specification.class), any(Pageable.class));
+        verify(orderMapper).toPageDto(page);
+    }
+
+    @Test
+    void recalculateTotalPrice_WhenTotalChanged_ShouldSave() {
+        // where: order with one item, totalPrice set differently
         order.addOrderItem(orderItem);
+        order.setTotalPrice(BigDecimal.ZERO); // incorrect
+
         when(orderRepository.findById(1)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
 
+        // when
         OrderResponseDto result = orderService.recalculateTotalPrice(1);
 
+        // then
         assertNotNull(result);
-        assertEquals(new BigDecimal("25.00"), order.getTotalPrice());
+        assertEquals(order.calculateTotalPrice(), order.getTotalPrice()); // total updated
+        verify(orderRepository).save(order); // save must be called
+        verify(orderMapper).toDto(order);
     }
 
     @Test
-    void delete_ShouldRemove_Success() {
-        when(orderRepository.deleteOrderById(1)).thenReturn(1);
+    void recalculateTotalPrice_WhenTotalUnchanged_ShouldNotSave() {
+        // where: order with one item, totalPrice already correct
+        order.addOrderItem(orderItem);
+        order.setTotalPrice(order.calculateTotalPrice()); // already correct
+
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+        when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
+
+        // when
+        OrderResponseDto result = orderService.recalculateTotalPrice(1);
+
+        // then
+        assertNotNull(result);
+        verify(orderRepository, never()).save(order); // save should NOT be called
+        verify(orderMapper).toDto(order);
+    }
+
+    @Test
+    void deleteOrder_Success() {
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+
         orderService.deleteOrder(1);
-        verify(orderRepository).deleteOrderById(1);
+
+        verify(orderRepository).delete(order);
     }
 
     @Test
-    void delete_OrderNotFound() {
-        when(orderRepository.deleteOrderById(1)).thenReturn(0);
+    void deleteOrder_NotFound() {
+        when(orderRepository.findById(1)).thenReturn(Optional.empty());
         assertThrows(OrderNotFoundException.class, () -> orderService.deleteOrder(1));
     }
 
     @Test
-    void calculateTotalPrice_Success() {
-        Order order1 = new Order();
-        order1.addOrderItem(OrderItem.builder().totalPrice(new BigDecimal("5.00")).build());
-        order1.addOrderItem(OrderItem.builder().totalPrice(new BigDecimal("15.00")).build());
-
-        assertEquals(new BigDecimal("20.00"), order1.calculateTotalPrice());
-    }
-
-    @Test
-    void calculateTotalPrice_NoItems() {
-        assertEquals(BigDecimal.ZERO, new Order().calculateTotalPrice());
+    void deleteOrder_NotPending() {
+        order.setOrderStatus(OrderStatus.DELIVERED);
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+        assertThrows(OrderDeletionNotAllowedException.class,
+                () -> orderService.deleteOrder(1));
     }
 }

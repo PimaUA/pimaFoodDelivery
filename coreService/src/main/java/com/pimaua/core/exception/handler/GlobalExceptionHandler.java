@@ -75,9 +75,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleDuplicateKey(
             DataIntegrityViolationException ex, WebRequest webRequest) {
         String message = "Data integrity violation";
-        if (ex.getCause() instanceof ConstraintViolationException) {
-            message = "Phone number already exists";
+        if (ex.getCause() instanceof ConstraintViolationException cve) {
+            String constraintName = cve.getConstraintName();
+            if (constraintName != null) {
+                if (constraintName.contains("phone")) {
+                    message = "Phone number already exists";
+                } else if (constraintName.contains("opening_hours")) {
+                    message = "Opening hours for this day already exist";
+                }
+            }
         }
+
         ErrorResponseDto errorResponseDto = ErrorResponseDto.builder()
                 .path(webRequest.getDescription(false).replace("uri=", ""))
                 .errorCode(HttpStatus.CONFLICT)

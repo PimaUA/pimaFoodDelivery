@@ -199,6 +199,7 @@ public class CustomerServiceTest {
         verify(customerRepository).findById(1);
         verify(customerRepository).save(mockCustomer);
         verify(customerMapper).toResponseDto(mockCustomer);
+        verify(customerMapper).updateEntity(mockCustomer, mockCustomerUpdateDto);
     }
 
     @Test
@@ -268,6 +269,16 @@ public class CustomerServiceTest {
 
         verify(customerRepository).findById(1);
         verify(customerRepository).delete(mockCustomer);
+    }
+
+    @Test
+    void findById_InvalidId_ThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> customerService.findById(0));
+    }
+
+    @Test
+    void updateCustomer_NullUpdateDto_ThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> customerService.updateCustomer(1, null));
     }
 
     //edge cases

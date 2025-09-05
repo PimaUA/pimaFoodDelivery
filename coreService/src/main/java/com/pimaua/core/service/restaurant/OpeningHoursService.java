@@ -2,6 +2,7 @@ package com.pimaua.core.service.restaurant;
 
 import com.pimaua.core.dto.restaurant.OpeningHoursRequestDto;
 import com.pimaua.core.dto.restaurant.OpeningHoursResponseDto;
+import com.pimaua.core.dto.restaurant.OpeningHoursUpdateDto;
 import com.pimaua.core.entity.restaurant.OpeningHours;
 import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.exception.custom.notfound.OpeningHoursNotFoundException;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -43,8 +45,10 @@ public class OpeningHoursService {
     public List<OpeningHoursResponseDto> findAllOpeningHoursByRestaurantId
             (Integer restaurantId) {
         Restaurant restaurant = findRestaurantByIdOrThrow(restaurantId);
-        List<OpeningHours> openingHours = openingHoursRepository.findByRestaurantIdOrderByDayOfWeekAsc(restaurantId);
-        return openingHoursMapper.toListDto(openingHours);
+        List<OpeningHours> openingHours = openingHoursRepository.findByRestaurantId(restaurantId);
+        openingHours.sort(Comparator.comparing(oh -> oh.getDayOfWeek().getValue()));
+        List<OpeningHours> limitedOpeningHoursList = openingHours.stream().limit(7).toList();
+        return openingHoursMapper.toListDto(limitedOpeningHoursList);
     }
 
     @Transactional(readOnly = true)
@@ -53,13 +57,13 @@ public class OpeningHoursService {
         return openingHoursMapper.toDto(openingHours);
     }
 
-    public OpeningHoursResponseDto update(Integer id, OpeningHoursRequestDto openingHoursRequestDto) {
-        if (openingHoursRequestDto == null) {
+    public OpeningHoursResponseDto update(Integer id, OpeningHoursUpdateDto openingHoursUpdateDto) {
+        if (openingHoursUpdateDto == null) {
             logger.error("Failed to update OpeningHours, no input");
             throw new IllegalArgumentException("OpeningHoursRequestDto cannot be null");
         }
         OpeningHours openingHours = findOpeningHoursOrThrow(id);
-        openingHoursMapper.updateEntity(openingHours, openingHoursRequestDto);
+        openingHoursMapper.updateEntity(openingHours, openingHoursUpdateDto);
         OpeningHours savedOpeningHours = openingHoursRepository.save(openingHours);
         return openingHoursMapper.toDto(savedOpeningHours);
     }

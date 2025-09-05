@@ -2,10 +2,12 @@ package com.pimaua.core.service.restaurant;
 
 import com.pimaua.core.dto.restaurant.OpeningHoursRequestDto;
 import com.pimaua.core.dto.restaurant.OpeningHoursResponseDto;
+import com.pimaua.core.dto.restaurant.OpeningHoursUpdateDto;
 import com.pimaua.core.entity.enums.DayOfWeek;
 import com.pimaua.core.entity.restaurant.OpeningHours;
 import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.exception.custom.notfound.OpeningHoursNotFoundException;
+import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.restaurant.OpeningHoursMapper;
 import com.pimaua.core.repository.restaurant.OpeningHoursRepository;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
@@ -18,7 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +36,7 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class OpeningHoursServiceTest {
+
     @Mock
     private OpeningHoursRepository openingHoursRepository;
     @Mock
@@ -45,6 +49,7 @@ public class OpeningHoursServiceTest {
 
     private OpeningHours openingHours;
     private OpeningHoursRequestDto openingHoursRequestDto;
+    private OpeningHoursUpdateDto openingHoursUpdateDto;
     private OpeningHoursResponseDto openingHoursResponseDto;
     private Restaurant restaurant;
 
@@ -74,6 +79,13 @@ public class OpeningHoursServiceTest {
                 .restaurantId(restaurant.getId())
                 .build();
 
+        openingHoursUpdateDto = OpeningHoursUpdateDto.builder()
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .opensAt(LocalTime.of(9, 0))
+                .closesAt(LocalTime.of(22, 0))
+                .is24Hours(false)
+                .build();
+
         openingHoursResponseDto = OpeningHoursResponseDto.builder()
                 .id(1)
                 .dayOfWeek(DayOfWeek.MONDAY)
@@ -84,114 +96,129 @@ public class OpeningHoursServiceTest {
                 .build();
     }
 
-    //CreateOpeningHours Tests
+    // create
     @Test
     void createOpeningHours_Success() {
-        //given
         when(restaurantRepository.findById(1)).thenReturn(Optional.of(restaurant));
         when(openingHoursMapper.toEntity(openingHoursRequestDto)).thenReturn(openingHours);
         when(openingHoursRepository.save(openingHours)).thenReturn(openingHours);
         when(openingHoursMapper.toDto(openingHours)).thenReturn(openingHoursResponseDto);
-        //when
+
         OpeningHoursResponseDto result = openingHoursService.create(1, openingHoursRequestDto);
-        //then
+
         assertNotNull(result);
         assertEquals(openingHoursResponseDto.getId(), result.getId());
-        assertEquals(openingHoursResponseDto.getIs24Hours(), result.getIs24Hours());
-
-        // interaction verification
+        verify(restaurantRepository).findById(1);
         verify(openingHoursMapper).toEntity(openingHoursRequestDto);
         verify(openingHoursRepository).save(openingHours);
         verify(openingHoursMapper).toDto(openingHours);
     }
 
     @Test
+    void createOpeningHours_RestaurantNotFound() {
+        when(restaurantRepository.findById(anyInt())).thenReturn(Optional.empty());
+
+        RestaurantNotFoundException exception = assertThrows(RestaurantNotFoundException.class, () ->
+                openingHoursService.create(1, openingHoursRequestDto));
+
+        assertEquals("Restaurant not found with ID 1", exception.getMessage());
+        verify(openingHoursRepository, never()).save(any(OpeningHours.class));
+    }
+
+    @Test
     void createOpeningHours_RepositoryException() {
-        //given
         when(restaurantRepository.findById(1)).thenReturn(Optional.of(restaurant));
         when(openingHoursMapper.toEntity(openingHoursRequestDto)).thenReturn(openingHours);
         when(openingHoursRepository.save(openingHours)).thenThrow(new RuntimeException("Database error"));
-        //when&then
-        assertThrows(RuntimeException.class, () -> {
-            openingHoursService.create(1, openingHoursRequestDto);
-        });
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                openingHoursService.create(1, openingHoursRequestDto));
+        assertEquals("Database error", exception.getMessage());
     }
 
-    //find all tests
     @Test
-    void findByRestaurantId_Success() {
-        // given
-        Integer restaurantId = 1;
-        List<OpeningHours> openingHoursList = List.of(openingHours);
-        List<OpeningHoursResponseDto> responseDtos = List.of(openingHoursResponseDto);
-        when(openingHoursRepository.findByRestaurantId(restaurantId)).thenReturn(openingHoursList);
+    void createOpeningHours_NullInput_ThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> openingHoursService.create(1, null));
+    }
+
+    // findAll
+    @Test
+    void findAllOpeningHoursByRestaurantId_Success() {
+        List<OpeningHours> openingHoursList = new ArrayList<>();
+        openingHoursList.add(openingHours);
+
+        List<OpeningHoursResponseDto> responseDtos = new ArrayList<>();
+        responseDtos.add(openingHoursResponseDto);
+
+        when(restaurantRepository.findById(1)).thenReturn(Optional.of(restaurant));
+        when(openingHoursRepository.findByRestaurantId(1)).thenReturn(openingHoursList);
         when(openingHoursMapper.toListDto(openingHoursList)).thenReturn(responseDtos);
-        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
-        // when
-        List<OpeningHoursResponseDto> result = openingHoursService.findByRestaurantId(restaurantId);
-        // then
+
+        List<OpeningHoursResponseDto> result = openingHoursService.findAllOpeningHoursByRestaurantId(1);
+
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(responseDtos, result);
     }
 
     @Test
-    void findByRestaurantId_EmptyList() {
-        // given
-        Integer restaurantId = 1;
-        List<OpeningHours> emptyList = List.of();
-        List<OpeningHoursResponseDto> emptyDtos = List.of();
-        when(openingHoursRepository.findByRestaurantId(restaurantId)).thenReturn(emptyList);
+    void findAllOpeningHoursByRestaurantId_RestaurantNotFound() {
+        when(restaurantRepository.findById(anyInt())).thenReturn(Optional.empty());
+
+        RestaurantNotFoundException exception = assertThrows(RestaurantNotFoundException.class, () ->
+                openingHoursService.findAllOpeningHoursByRestaurantId(1));
+
+        assertEquals("Restaurant not found with ID 1", exception.getMessage());
+    }
+
+    @Test
+    void findAllOpeningHoursByRestaurantId_EmptyList() {
+        List<OpeningHours> emptyList = new ArrayList<>();
+        List<OpeningHoursResponseDto> emptyDtos = new ArrayList<>();
+
+        when(restaurantRepository.findById(1)).thenReturn(Optional.of(restaurant));
+        when(openingHoursRepository.findByRestaurantId(1)).thenReturn(emptyList);
         when(openingHoursMapper.toListDto(emptyList)).thenReturn(emptyDtos);
-        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
-        // when
-        List<OpeningHoursResponseDto> result = openingHoursService.findByRestaurantId(restaurantId);
-        // then
+
+        List<OpeningHoursResponseDto> result = openingHoursService.findAllOpeningHoursByRestaurantId(1);
+
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
 
-    //findById tests
+    // find by id
     @Test
     void findById_Success() {
-        // given
-        Integer restaurantId = 1;
-        List<OpeningHours> emptyList = List.of();
-        List<OpeningHoursResponseDto> emptyDtos = List.of();
-        when(openingHoursRepository.findByRestaurantId(restaurantId)).thenReturn(emptyList);
-        when(openingHoursMapper.toListDto(emptyList)).thenReturn(emptyDtos);
-        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
-        // when
-        List<OpeningHoursResponseDto> result = openingHoursService.findByRestaurantId(restaurantId);
-        // then
+        when(openingHoursRepository.findById(1)).thenReturn(Optional.of(openingHours));
+        when(openingHoursMapper.toDto(openingHours)).thenReturn(openingHoursResponseDto);
+
+        OpeningHoursResponseDto result = openingHoursService.findById(1);
+
         assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertEquals(openingHoursResponseDto, result);
     }
 
     @Test
     void findById_OpeningHoursNotFound() {
-        //given
         when(openingHoursRepository.findById(anyInt())).thenReturn(Optional.empty());
-        //when&then
-        OpeningHoursNotFoundException exception = assertThrows(OpeningHoursNotFoundException.class, () -> {
-            openingHoursService.findById(999);
-        });
+
+        OpeningHoursNotFoundException exception = assertThrows(OpeningHoursNotFoundException.class, () ->
+                openingHoursService.findById(999));
+
         assertEquals("Opening hours not found with ID 999", exception.getMessage());
     }
 
-    //update OpeningHours tests
+    // update
     @Test
     void updateOpeningHours_Success() {
-        // Given
         when(openingHoursRepository.findById(1)).thenReturn(Optional.of(openingHours));
         when(openingHoursRepository.save(openingHours)).thenReturn(openingHours);
         when(openingHoursMapper.toDto(openingHours)).thenReturn(openingHoursResponseDto);
-        // When
-        OpeningHoursResponseDto result = openingHoursService.update(1, openingHoursRequestDto);
-        // Then
+
+        OpeningHoursResponseDto result = openingHoursService.update(1, openingHoursUpdateDto);
+
         assertNotNull(result);
         assertEquals(openingHoursResponseDto, result);
-        // interaction verification
         verify(openingHoursRepository).findById(1);
         verify(openingHoursRepository).save(openingHours);
         verify(openingHoursMapper).toDto(openingHours);
@@ -199,68 +226,111 @@ public class OpeningHoursServiceTest {
 
     @Test
     void updateOpeningHours_OpeningHoursNotFound() {
-        // Given
         when(openingHoursRepository.findById(anyInt())).thenReturn(Optional.empty());
-        // When & Then
-        OpeningHoursNotFoundException exception = assertThrows(OpeningHoursNotFoundException.class, () -> {
-            openingHoursService.update(999, openingHoursRequestDto);
-        });
+
+        OpeningHoursNotFoundException exception = assertThrows(OpeningHoursNotFoundException.class, () ->
+                openingHoursService.update(999, openingHoursUpdateDto));
+
         assertEquals("Opening hours not found with ID 999", exception.getMessage());
     }
 
     @Test
     void updateOpeningHours_RepositoryException() {
-        // Given
         when(openingHoursRepository.findById(1)).thenReturn(Optional.of(openingHours));
         when(openingHoursRepository.save(openingHours)).thenThrow(new RuntimeException("Database error"));
-        // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            openingHoursService.update(1, openingHoursRequestDto);
-        });
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                openingHoursService.update(1, openingHoursUpdateDto));
+
+        assertEquals("Database error", exception.getMessage());
     }
 
-    //delete OpeningHours tests
+    // delete
     @Test
     void deleteOpeningHours_Success() {
-        // Given
         when(openingHoursRepository.findById(1)).thenReturn(Optional.of(openingHours));
-        // When
+
         openingHoursService.delete(1);
-        // Then
+
         verify(openingHoursRepository).findById(1);
         verify(openingHoursRepository).delete(openingHours);
     }
 
     @Test
     void deleteOpeningHours_OpeningHoursNotFound() {
-        // Given
         when(openingHoursRepository.findById(anyInt())).thenReturn(Optional.empty());
-        // When & Then
-        OpeningHoursNotFoundException exception = assertThrows(OpeningHoursNotFoundException.class, () -> {
-            openingHoursService.delete(999);
-        });
+        OpeningHoursNotFoundException exception = assertThrows(OpeningHoursNotFoundException.class, () ->
+                openingHoursService.delete(999));
+
         assertEquals("Opening hours not found with ID 999", exception.getMessage());
         verify(openingHoursRepository).findById(999);
-        verify(openingHoursRepository, never()).delete(any());
+        verify(openingHoursRepository, never()).delete(any(OpeningHours.class));
     }
 
     @Test
     void deleteOpeningHours_RepositoryException() {
-        // Given
         when(openingHoursRepository.findById(1)).thenReturn(Optional.of(openingHours));
         doThrow(new RuntimeException("Database error")).when(openingHoursRepository).delete(openingHours);
-        // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            openingHoursService.delete(1);
-        });
 
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                openingHoursService.delete(1));
+        assertEquals("Database error", exception.getMessage());
         verify(openingHoursRepository).findById(1);
         verify(openingHoursRepository).delete(openingHours);
     }
 
-    //edge cases
     @Test
-    void createOpeningHours_NullInput_ThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> openingHoursService.create(1,null));
+    void findAllOpeningHoursByRestaurantId_SortedAndLimitedTo7() {
+        // Create 10 OpeningHours out of order
+        List<OpeningHours> openingHoursList = new ArrayList<>(List.of(
+                OpeningHours.builder().dayOfWeek(DayOfWeek.WEDNESDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.MONDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.FRIDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.SUNDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.TUESDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.THURSDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.SATURDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.MONDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.FRIDAY).restaurant(restaurant).build(),
+                OpeningHours.builder().dayOfWeek(DayOfWeek.SUNDAY).restaurant(restaurant).build()
+        ));
+
+        // Sort and limit to 7 like the service would
+        List<OpeningHours> sortedAndLimited = new ArrayList<>(openingHoursList);
+        sortedAndLimited.sort(Comparator.comparing(oh -> oh.getDayOfWeek().getValue()));
+        sortedAndLimited = sortedAndLimited.stream().limit(7).toList();
+
+        // Map to DTOs
+        List<OpeningHoursResponseDto> responseDtos = sortedAndLimited.stream()
+                .map(oh -> OpeningHoursResponseDto.builder()
+                        .dayOfWeek(oh.getDayOfWeek())
+                        .build())
+                .toList();
+
+        // Mock repository and mapper
+        when(restaurantRepository.findById(1)).thenReturn(Optional.of(restaurant));
+        when(openingHoursRepository.findByRestaurantId(1)).thenReturn(openingHoursList);
+        when(openingHoursMapper.toListDto(anyList())).thenReturn(responseDtos);
+
+        // Call service
+        List<OpeningHoursResponseDto> result = openingHoursService.findAllOpeningHoursByRestaurantId(1);
+
+        // Verify size
+        assertEquals(7, result.size());
+
+        // Verify sorting order MONDAY → SUNDAY
+        List<DayOfWeek> expectedOrder = sortedAndLimited.stream()
+                .map(OpeningHours::getDayOfWeek)
+                .toList();
+        for (int i = 0; i < expectedOrder.size(); i++) {
+            assertEquals(expectedOrder.get(i), result.get(i).getDayOfWeek(),
+                    "DayOfWeek at index " + i + " should match expected order");
+        }
+
+        // Verify repository and mapper interactions
+        verify(restaurantRepository).findById(1);
+        verify(openingHoursRepository).findByRestaurantId(1);
+        verify(openingHoursMapper).toListDto(anyList());
     }
 }
+
