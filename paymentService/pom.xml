@@ -16,6 +16,8 @@
 
     <properties>
         <stripe-java.version>29.4.0</stripe-java.version>
+        <shedlock-spring.version>6.3.1</shedlock-spring.version>
+        <shedlock-provider-jdbc-template.version>6.3.1</shedlock-provider-jdbc-template.version>
     </properties>
 
     <dependencies>
@@ -27,6 +29,17 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>${shedlock-spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>${shedlock-provider-jdbc-template.version}</version>
         </dependency>
 
         <dependency>

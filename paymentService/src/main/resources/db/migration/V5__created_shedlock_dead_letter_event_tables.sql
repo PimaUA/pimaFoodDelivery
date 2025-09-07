@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS shedlock(
+name VARCHAR(64) NOT NULL PRIMARY KEY,
+lock_until TIMESTAMP(3) NOT NULL,
+locked_at TIMESTAMP(3) NOT NULL,
+locked_by VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS dead_letter_event(
+id INT AUTO_INCREMENT PRIMARY KEY,
+original_event_id INT NOT NULL,
+payload TEXT,
+error_description VARCHAR(255) NOT NULL,
+created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3)
+);
