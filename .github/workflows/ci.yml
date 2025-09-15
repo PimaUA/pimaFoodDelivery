@@ -41,7 +41,7 @@ jobs:
       # Build and push Docker images
       - name: Build and push Docker images
         run: |
-          for service in coreService paymentService; do
+          for service in coreservice paymentservice; do
             IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/$service
             echo "Building and pushing $IMAGE:latest"
             docker build -t $IMAGE:latest $service
