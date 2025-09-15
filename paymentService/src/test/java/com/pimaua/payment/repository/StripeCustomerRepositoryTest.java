@@ -17,14 +17,17 @@ public class StripeCustomerRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void saveAndFindStripeCustomer() {
+        //given
         StripeCustomer stripeCustomer = StripeCustomer.builder()
                 .userId(1)
                 .stripeCustomerId("1234")
                 .createdAt(LocalDateTime.of(2025, 8, 1, 10, 30, 0))
                 .build();
 
+        //when
         StripeCustomer savedStripeCustomer = stripeCustomerRepository.save(stripeCustomer);
 
+        //then
         Optional<StripeCustomer> foundStripeCustomer = stripeCustomerRepository.findByStripeCustomerId("1234");
         assertTrue(foundStripeCustomer.isPresent());
         assertEquals("1234", foundStripeCustomer.get().getStripeCustomerId());

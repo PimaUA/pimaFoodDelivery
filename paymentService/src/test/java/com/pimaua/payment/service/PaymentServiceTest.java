@@ -85,6 +85,7 @@ class PaymentServiceTest {
     //createPaymentIntent tests
     @Test
     void shouldCreatePaymentIntentSuccessfully() throws Exception {
+        //given
         ResponseDto<OrderForPaymentDto> responseDto =
                 new ResponseDto<>("200", "success", orderDto);
 

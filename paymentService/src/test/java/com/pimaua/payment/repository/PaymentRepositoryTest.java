@@ -35,7 +35,9 @@ public class PaymentRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void saveAndFindPayment(){
+        //when
         Optional<Payment> foundPayment = paymentRepository.findByOrderId(1);
+        //then
         assertTrue(foundPayment.isPresent());
         assertEquals(1, foundPayment.get().getOrderId());
         assertEquals(BigDecimal.valueOf(25.0), foundPayment.get().getAmount());
@@ -45,7 +47,9 @@ public class PaymentRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void existsByOrderId_Success() {
+        //when
         Boolean exists = paymentRepository.existsByOrderId(1);
+        //then
         assertTrue(exists);
     }
 

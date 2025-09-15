@@ -7,6 +7,9 @@ LABEL "org.opencontainers.image.authors"="pima.com"
 # Install curl for health checks (optional)
 RUN apt-get update && apt-get install -y curl
 
+# Set working directory
+WORKDIR /app
+
 #Add the application's jar to the image
 COPY target/coreService-0.0.1-SNAPSHOT.jar coreService.jar
 
