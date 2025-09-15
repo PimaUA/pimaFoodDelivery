@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TESTCONTAINERS_RYUK_DISABLED: "true"
 
     steps:
       # Checkout code
@@ -25,7 +27,7 @@ jobs:
 
       # Run all tests
       - name: Run tests
-        run: mvn -B clean verify
+        run: mvn clean verify -X
 
       # Package JARs (without re-running tests)
       - name: Package microservices
