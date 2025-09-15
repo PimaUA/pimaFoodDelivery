@@ -8,6 +8,7 @@ import com.pimaua.core.exception.custom.notfound.CustomerNotFoundException;
 import com.pimaua.core.mapper.customer.CustomerMapper;
 import com.pimaua.core.repository.customer.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 public class CustomerServiceTest {
     @Mock
     private CustomerRepository customerRepository;

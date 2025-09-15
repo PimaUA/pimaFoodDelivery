@@ -11,6 +11,7 @@ import com.pimaua.core.exception.custom.notfound.RestaurantNotFoundException;
 import com.pimaua.core.mapper.restaurant.RestaurantMapper;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 public class RestaurantServiceTest {
         @Mock
         private RestaurantRepository restaurantRepository;

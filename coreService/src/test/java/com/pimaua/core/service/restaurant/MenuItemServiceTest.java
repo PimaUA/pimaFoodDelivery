@@ -10,6 +10,7 @@ import com.pimaua.core.mapper.restaurant.MenuItemMapper;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import com.pimaua.core.repository.restaurant.MenuRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 public class MenuItemServiceTest {
 
     @Mock

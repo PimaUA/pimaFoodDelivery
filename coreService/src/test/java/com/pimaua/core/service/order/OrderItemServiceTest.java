@@ -14,6 +14,7 @@ import com.pimaua.core.repository.order.OrderRepository;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import com.pimaua.core.service.restaurant.MenuItemService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,6 +35,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class OrderItemServiceTest {
     @Mock
     private OrderItemRepository orderItemRepository;
