@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y curl
 WORKDIR /app
 
 #Add the application's jar to the image
-COPY target/coreService-0.0.1-SNAPSHOT.jar coreService.jar
+COPY target/coreservice-0.0.1-SNAPSHOT.jar coreservice.jar
 
 #execute the application when creating container
-ENTRYPOINT ["java","-jar","coreService.jar"]
+ENTRYPOINT ["java","-jar","coreservice.jar"]
