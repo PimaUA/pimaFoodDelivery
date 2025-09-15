@@ -25,7 +25,7 @@ jobs:
 
       # Run unit tests for paymentService & coreService
       - name: Run pure unit tests
-        run: mvn -pl coreService,paymentService surefire:test -Dtest=*UnitTest
+        run: mvn -pl coreService,paymentService test -Dgroups=unit
 
       # Package microservices (skip all tests here to save time)
       - name: Package microservices
