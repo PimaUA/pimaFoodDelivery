@@ -23,9 +23,9 @@ jobs:
           java-version: 17
           cache: maven
 
-      # Run ONLY unit tests for coreService + paymentService
-      - name: Run unit tests
-        run: mvn -pl coreService,paymentService test -DskipITs
+      # Run unit tests for paymentService & coreService
+      - name: Run pure unit tests
+        run: mvn -pl coreService,paymentService surefire:test -Dtest=*UnitTest
 
       # Package microservices (skip all tests here to save time)
       - name: Package microservices
