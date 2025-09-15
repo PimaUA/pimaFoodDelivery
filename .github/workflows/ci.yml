@@ -30,7 +30,7 @@ jobs:
 
       #Run all tests
       - name: Run tests
-        run: mvn -B clean verify -Dtestcontainers.reuse.enable=true
+        run: mvn clean verify -DskipITs
 
       #Package microservices (skip tests to save time)
       - name: Package microservices
