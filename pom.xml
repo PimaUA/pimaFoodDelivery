@@ -16,9 +16,9 @@
 
     <modules>
         <module>authService</module>
-        <module>coreService</module>
+        <module>coreservice</module>
         <module>deliveryService</module>
-        <module>paymentService</module>
+        <module>paymentservice</module>
     </modules>
 
     <properties>

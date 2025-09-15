@@ -10,7 +10,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>paymentService</artifactId>
+    <artifactId>paymentservice</artifactId>
     <name>paymentService</name>
     <description>Payment Microservice</description>
 
