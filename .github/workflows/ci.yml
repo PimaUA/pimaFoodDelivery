@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Disable Ryuk only in CI
+      TESTCONTAINERS_RYUK_DISABLED: "true"
     
     steps:
       # Checkout code
