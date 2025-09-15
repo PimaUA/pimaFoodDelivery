@@ -27,9 +27,7 @@ public class BaseRepositoryTest {
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        if (!mysql.isRunning()) {
-            mysql.start();
-        }
+        mysql.start();
         registry.add("spring.datasource.url", mysql::getJdbcUrl);
         registry.add("spring.datasource.username", mysql::getUsername);
         registry.add("spring.datasource.password", mysql::getPassword);
