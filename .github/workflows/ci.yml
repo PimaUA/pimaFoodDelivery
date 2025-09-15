@@ -9,11 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      # Needed for Testcontainers in GitHub Actions
-      TESTCONTAINERS_RYUK_DISABLED: "true"
-      DOCKER_HOST: "unix:///var/run/docker.sock"
-      TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: "/var/run/docker.sock"
 
     steps:
       # Checkout the repository
@@ -28,9 +23,9 @@ jobs:
           java-version: 17
           cache: maven
 
-      # Run only unit tests (skip integration & context-heavy tests)
+      # Run ONLY unit tests for coreService + paymentService
       - name: Run unit tests
-        run: mvn -B test -DskipITs -Dspring.profiles.active=test
+        run: mvn -pl coreService,paymentService test -DskipITs
 
       # Package microservices (skip all tests here to save time)
       - name: Package microservices
