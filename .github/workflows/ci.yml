@@ -10,8 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # Disable Ryuk only in CI
       TESTCONTAINERS_RYUK_DISABLED: "true"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+      TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: "/var/run/docker.sock"
     
     steps:
       # Checkout code
@@ -28,7 +29,7 @@ jobs:
 
       # Run all tests
       - name: Run tests
-        run: mvn clean verify -X
+        run: mvn clean verify
 
       # Package JARs (without re-running tests)
       - name: Package microservices
