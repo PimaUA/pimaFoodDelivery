@@ -7,6 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -23,7 +24,9 @@ public abstract class BaseRepositoryTest {
             .withDatabaseName("paymentservicedb")
             .withUsername("test")
             .withPassword("test")
-            .withStartupTimeout(Duration.ofMinutes(5));
+            .withStartupTimeout(Duration.ofMinutes(5)) // wait up to 5 mins
+            .waitingFor(Wait.forListeningPort())      // ensures MySQL port is ready
+            .withReuse(true);                // reuse container between tests
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
