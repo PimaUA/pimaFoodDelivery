@@ -3,6 +3,7 @@ package com.pimaua.core.test.utils;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,17 +22,13 @@ import java.time.Duration;
 public abstract class BaseRepositoryTest {
 
     @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+    @ServiceConnection
+    static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
             .withStartupTimeout(Duration.ofMinutes(2))
-            .waitingFor(Wait.forListeningPort())
-            .withReuse(true);
-
-    static {
-        mysql.start(); // Force start BEFORE Spring Boot reads datasource properties
-    }
+            .waitingFor(Wait.forListeningPort());
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
