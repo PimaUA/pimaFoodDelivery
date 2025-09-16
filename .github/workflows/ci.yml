@@ -37,8 +37,10 @@ jobs:
         run: |
           for service in coreservice paymentservice; do
             IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/$service
+            echo "Building and pushing $IMAGE:latest"
             docker build -t $IMAGE:latest $service
             docker push $IMAGE:latest
+          done
           
   integration-tests:
     runs-on: ubuntu-latest
