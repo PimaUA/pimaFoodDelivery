@@ -80,6 +80,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: packaged-microservices
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -104,18 +109,11 @@ jobs:
             echo "Waiting for MySQL... (Attempt $i/30)"
             sleep 2
           done
-
+          
           if ! mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
             echo "MySQL failed to start after multiple attempts."
             exit 1
           fi
-        shell: bash
-
-      - name: Initialize Database (Optional)
-        run: |
-          echo "Setting up database..."
-          # Uncomment and modify if you have a schema SQL file
-          # mysql -h 127.0.0.1 -uroot -ptest testdb < your-schema-file.sql
         shell: bash
 
       - name: Run Integration Tests
