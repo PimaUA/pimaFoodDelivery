@@ -76,5 +76,11 @@ jobs:
       - name: Verify Docker availability
         run: docker version
 
-      - name: Run Repository Integration Tests
-        run: mvn test -Pintegration-tests -Dspring.profiles.active=test -pl ${{ env.SERVICES }}
+      - name: Run Integration Tests
+        run: |
+          for service in ${SERVICES//,/ }; do
+            echo "Running integration tests for $service..."
+            # Run Maven test command for each service
+            mvn test -Pintegration-tests -pl ":$service"
+          done
+        shell: bash

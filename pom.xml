@@ -28,7 +28,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <springdoc.version>2.8.9</springdoc.version>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
-        <groups>integration</groups>
+        <groups></groups>
     </properties>
 
     <dependencies>
