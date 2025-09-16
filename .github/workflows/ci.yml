@@ -91,34 +91,11 @@ jobs:
         run: |
           MYSQL_PORT=${{ job.services.mysql.ports['3306'] }}
           echo "Waiting for MySQL on port $MYSQL_PORT..."
+
           for i in {1..30}; do
             if mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "MySQL not ready yet... retrying ($i/30)"
-            sleep 2
-          done
-
-          # Fail if MySQL is still not ready
-          if ! mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
-            echo "MySQL failed to start!"
-            exit 1
-          fi
-
-          echo "Creating test database..."
-          mysql -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest -e "
-            CREATE DATABASE IF NOT EXISTS testdb;
-            GRANT ALL PRIVILEGES ON testdb.* TO 'root'@'%';
-            FLUSH PRIVILEGES;
-          "
-        shell: bash
-
-      - name: Run Integration Tests
-        env:
-          SPRING_PROFILES_ACTIVE: integration-test
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:${{ job.services.mysql.ports['3306'] }}/testdb
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: test
-        run: mvn test -Pintegration-tests -pl ${SERVICES//,/ }
-        shell: bash
+            echo "MySQL n
+  
