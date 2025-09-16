@@ -11,7 +11,6 @@ on:
 
 env:
   SERVICES: "coreservice,paymentservice,authservice,deliveryservice"
-  # This is for Docker Hub, so the images are pushed to a specific account
   DOCKER_IMAGE_REPO: ${{ secrets.DOCKER_HUB_USERNAME }}
 
 jobs:
@@ -94,27 +93,30 @@ jobs:
           sudo apt-get install -y mysql-client
         shell: bash
 
-      - name: Wait for MySQL and Setup Database
+      - name: Wait for MySQL
         run: |
-          MYSQL_PORT=${{ job.services.mysql.ports['3306'] }}
-          echo "Waiting for MySQL on port $MYSQL_PORT..."
-
+          echo "Waiting for MySQL to be ready..."
           for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
+            if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "Waiting for MySQL on port $MYSQL_PORT... (Attempt $i/30)"
+            echo "Waiting for MySQL... (Attempt $i/30)"
             sleep 2
           done
-          
-          # Check one last time to ensure it's up before failing
-          if ! mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
+
+          if ! mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
             echo "MySQL failed to start after multiple attempts."
             exit 1
           fi
-
-          echo "Setting up database..."
-          # Add any database schema initialization here, e.g., with a .sql file
-          # mysql -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest < your-schema-file.sql
         shell: bash
+
+      - name: Initialize Database (Optional)
+        run: |
+          echo "Setting up database..."
+          # Uncomment and modify if you have a schema SQL file
+          # mysql -h 127.0.0.1 -uroot -ptest testdb < your-schema-file.sql
+        shell: bash
+
+      - name: Run Integration Tests
+        run: mvn test -Pintegration-tests -pl ${{ env.SERVICES }}
