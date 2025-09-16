@@ -6,5 +6,10 @@ spring:
     enabled: false
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 5
+      max-lifetime: 120000
+
 
 

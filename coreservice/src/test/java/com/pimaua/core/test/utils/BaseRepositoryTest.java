@@ -10,6 +10,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
+
 @Testcontainers
 @DataJpaTest
 @ActiveProfiles("test")
@@ -21,7 +23,8 @@ public abstract class BaseRepositoryTest {
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("testdb")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            .withStartupTimeout(Duration.ofMinutes(2));
 
     static {
         mysql.start(); // Force start BEFORE Spring Boot reads datasource properties
