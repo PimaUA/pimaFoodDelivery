@@ -11,16 +11,21 @@ on:
 
 env:
   SERVICES: "coreservice,paymentservice,authservice,deliveryservice"
+  # This is for Docker Hub, so the images are pushed to a specific account
+  DOCKER_IMAGE_REPO: ${{ secrets.DOCKER_HUB_USERNAME }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - uses: actions/setup-java@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -45,7 +50,7 @@ jobs:
           for service in ${SERVICES//,/ }; do
             dockerfile="./$service/Dockerfile"
             if [[ -f "$dockerfile" ]]; then
-              IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/$service:latest
+              IMAGE=${{ env.DOCKER_IMAGE_REPO }}/$service:latest
               echo "Building and pushing $IMAGE"
               docker build -t "$IMAGE" "./$service"
               docker push "$IMAGE"
@@ -73,9 +78,11 @@ jobs:
           --health-retries=30
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -97,5 +104,17 @@ jobs:
               echo "MySQL is ready!"
               break
             fi
-            echo "MySQL n
-  
+            echo "Waiting for MySQL on port $MYSQL_PORT... (Attempt $i/30)"
+            sleep 2
+          done
+          
+          # Check one last time to ensure it's up before failing
+          if ! mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
+            echo "MySQL failed to start after multiple attempts."
+            exit 1
+          fi
+
+          echo "Setting up database..."
+          # Add any database schema initialization here, e.g., with a .sql file
+          # mysql -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest < your-schema-file.sql
+        shell: bash
