@@ -64,7 +64,7 @@ jobs:
           --health-retries=30
 
     env:
-      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/testdb
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: test
 
@@ -85,17 +85,16 @@ jobs:
       - name: Wait for MySQL
         run: |
           echo "Waiting for MySQL to be ready..."
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
+          for i in {1..60}; do
+            if mysqladmin ping -h mysql -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "MySQL not ready yet... retrying ($i/30)"
-            sleep 2
+            echo "MySQL not ready yet... retrying ($i/60)"
+            sleep 5
           done
-
           # Verify we can actually connect and query
-          mysql -h 127.0.0.1 -uroot -ptest -e "SELECT 1;" testdb
+          mysql -h mysql -uroot -ptest -e "SELECT 1;" testdb
 
       - name: Run Integration Tests
         run: mvn -pl coreservice,paymentservice,authservice,deliveryservice verify -Pintegration-tests
