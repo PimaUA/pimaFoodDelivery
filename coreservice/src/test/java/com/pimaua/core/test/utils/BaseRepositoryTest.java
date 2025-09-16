@@ -1,6 +1,7 @@
 package com.pimaua.core.test.utils;
 
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -13,6 +14,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public abstract class BaseRepositoryTest {
 
     @Container
@@ -27,5 +29,6 @@ public abstract class BaseRepositoryTest {
         registry.add("spring.datasource.username", mysql::getUsername);
         registry.add("spring.datasource.password", mysql::getPassword);
         registry.add("spring.datasource.driver-class-name", mysql::getDriverClassName);
+        registry.add("spring.flyway.enabled", () -> "false");
     }
 }
