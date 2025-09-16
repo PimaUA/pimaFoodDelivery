@@ -32,11 +32,6 @@ public abstract class BaseRepositoryTest {
             .withPassword("test")
             .withStartupTimeout(Duration.ofMinutes(5)); // wait up to 5 mins
 
-    static {
-        log.info("Starting MySQL Testcontainer...");
-        mysql.start();
-    }
-
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
         log.info("Overriding Spring Datasource properties for Testcontainers...");

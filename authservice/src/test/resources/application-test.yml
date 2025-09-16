@@ -4,6 +4,9 @@ spring:
     username: test                           # placeholder, overridden by Testcontainers
     password: test                           # placeholder, overridden by Testcontainers
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 60000   # 60 seconds
+      maximum-pool-size: 5
 
   jpa:
     hibernate:
