@@ -110,7 +110,7 @@ jobs:
         run: |
           echo "Waiting for MySQL to be ready..."
           for i in {1..60}; do
-            if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
+            if mysqladmin ping -h mysql -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
@@ -118,7 +118,7 @@ jobs:
             sleep 2
           done
 
-          if ! mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
+          if ! mysqladmin ping -h mysql -uroot -ptest --silent; then
             echo "MySQL failed to start"
             exit 1
           fi
@@ -127,7 +127,7 @@ jobs:
       - name: Initialize Database (Optional)
         run: |
           echo "Setting up database..."
-          # mysql -h 127.0.0.1 -uroot -ptest testdb < path/to/your-schema.sql
+          # mysql -h mysql -uroot -ptest testdb < path/to/your-schema.sql
         shell: bash
 
       - name: Start Microservices
