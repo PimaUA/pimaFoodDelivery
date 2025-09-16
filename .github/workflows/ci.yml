@@ -77,7 +77,7 @@ jobs:
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=10
     steps:
       # Checkout code
       - uses: actions/checkout@v4
@@ -94,38 +94,36 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-client
+        shell: bash
 
-      # Wait for MySQL to be ready
-      - name: Wait for MySQL
+      # Wait for MySQL and setup database
+      - name: Wait for MySQL and Setup Database
         run: |
           echo "Waiting for MySQL to be ready..."
           for i in {1..30}; do
-            # Use the service name 'mysql' as the hostname
-            if mysqladmin ping -h mysql -uroot -ptest --silent; then 
+            if mysqladmin ping -h mysql -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
             echo "MySQL not ready yet... retrying ($i/30)"
             sleep 2
           done
-        shell: bash
 
-      # Setup test database
-      - name: Setup Test Database
-        run: |
-          # Use the service name 'mysql' as the hostname
+          echo "Creating test database..."
           mysql -h mysql -uroot -ptest -e "
             CREATE DATABASE IF NOT EXISTS testdb;
             GRANT ALL PRIVILEGES ON testdb.* TO 'root'@'%';
             FLUSH PRIVILEGES;
           "
+        shell: bash
 
       # Run integration tests
       - name: Run Integration Tests
         env:
           SPRING_PROFILES_ACTIVE: integration-test
-          # Use the service name 'mysql' as the hostname
           SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: test
         run: mvn test -Pintegration-tests -pl ${{ env.SERVICES }}
+        shell: bash
+
