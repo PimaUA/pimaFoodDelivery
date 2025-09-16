@@ -45,18 +45,19 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # Build and push Docker images
+      # Build and push Docker image
       - name: Build and Push Docker Images
         if: github.event_name == 'push'
         run: |
-          for service in $(echo ${{ env.SERVICES }} | tr ',' ' '); do
-            if [ -f "./$service/Dockerfile" ]; then
-              IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/$service
-              echo "Building and pushing $IMAGE:latest"
-              docker build -t $IMAGE:latest ./$service
-              docker push $IMAGE:latest
+          for service in ${SERVICES//,/ }; do
+            dockerfile="./$service/Dockerfile"
+            if [[ -f "$dockerfile" ]]; then
+              IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/$service:latest
+              echo "Building and pushing $IMAGE"
+              docker build -t "$IMAGE" "./$service"
+              docker push "$IMAGE"
             else
-              echo "Dockerfile not found for $service, skipping..."
+              echo "No Dockerfile for $service, skipping..."
             fi
           done
         shell: bash
@@ -77,7 +78,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-
     steps:
       # Checkout code
       - uses: actions/checkout@v4
@@ -100,7 +100,8 @@ jobs:
         run: |
           echo "Waiting for MySQL to be ready..."
           for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
+            # Use the service name 'mysql' as the hostname
+            if mysqladmin ping -h mysql -uroot -ptest --silent; then 
               echo "MySQL is ready!"
               break
             fi
@@ -112,7 +113,8 @@ jobs:
       # Setup test database
       - name: Setup Test Database
         run: |
-          mysql -h 127.0.0.1 -uroot -ptest -e "
+          # Use the service name 'mysql' as the hostname
+          mysql -h mysql -uroot -ptest -e "
             CREATE DATABASE IF NOT EXISTS testdb;
             GRANT ALL PRIVILEGES ON testdb.* TO 'root'@'%';
             FLUSH PRIVILEGES;
@@ -122,7 +124,8 @@ jobs:
       - name: Run Integration Tests
         env:
           SPRING_PROFILES_ACTIVE: integration-test
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/testdb
+          # Use the service name 'mysql' as the hostname
+          SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: test
         run: mvn test -Pintegration-tests -pl ${{ env.SERVICES }}
