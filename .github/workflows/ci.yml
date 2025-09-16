@@ -16,28 +16,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Checkout code
       - uses: actions/checkout@v4
 
-      # Set up Docker buildx
       - uses: docker/setup-buildx-action@v3
 
-      # Set up Java and Maven cache
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
           cache: maven
 
-      # Run unit tests for all services
       - name: Run Unit Tests
         run: mvn test -Punit-tests -pl ${{ env.SERVICES }}
 
-      # Package microservices (skip tests)
       - name: Package Microservices
         run: mvn clean package -DskipTests -pl ${{ env.SERVICES }}
 
-      # Log in to Docker Hub (only on push)
       - name: Log in to Docker Hub
         if: github.event_name == 'push'
         uses: docker/login-action@v3
@@ -45,7 +39,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # Build and push Docker image
       - name: Build and Push Docker Images
         if: github.event_name == 'push'
         run: |
@@ -62,72 +55,70 @@ jobs:
           done
         shell: bash
 
-integration-tests:
-  runs-on: ubuntu-latest
-  needs: build
-  services:
-    mysql:
-      image: mysql:8.0
-      env:
-        MYSQL_ROOT_PASSWORD: test
-        MYSQL_DATABASE: testdb
-      ports:
-        - 3306:3306
-      options: >-
-        --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent"
-        --health-interval=10s
-        --health-timeout=5s
-        --health-retries=30
-  steps:
-    # Checkout code
-    - uses: actions/checkout@v4
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=30
 
-    # Set up Java 17 with Maven cache
-    - uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 17
-        cache: maven
+    steps:
+      - uses: actions/checkout@v4
 
-    # Install MySQL client
-    - name: Install MySQL Client
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y mysql-client
-      shell: bash
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
 
-    # Wait for MySQL to be ready and setup database
-    - name: Wait for MySQL and Setup Database
-      run: |
-        # Use the dynamic port from the service
-        MYSQL_PORT=${{ job.services.mysql.ports['3306'] }}
-        echo "Waiting for MySQL on port $MYSQL_PORT..."
-        for i in {1..30}; do
-          if mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
-            echo "MySQL is ready!"
-            break
+      - name: Install MySQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+        shell: bash
+
+      - name: Wait for MySQL and Setup Database
+        run: |
+          MYSQL_PORT=${{ job.services.mysql.ports['3306'] }}
+          echo "Waiting for MySQL on port $MYSQL_PORT..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready yet... retrying ($i/30)"
+            sleep 2
+          done
+
+          # Fail if MySQL is still not ready
+          if ! mysqladmin ping -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest --silent; then
+            echo "MySQL failed to start!"
+            exit 1
           fi
-          echo "MySQL not ready yet... retrying ($i/30)"
-          sleep 2
-        done
-        
-        echo "Creating test database..."
-        mysql -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest -e "
-          CREATE DATABASE IF NOT EXISTS testdb;
-          GRANT ALL PRIVILEGES ON testdb.* TO 'root'@'%';
-          FLUSH PRIVILEGES;
-        "
-      shell: bash
 
-    # Run integration tests
-    - name: Run Integration Tests
-      env:
-        SPRING_PROFILES_ACTIVE: integration-test
-        # Use the dynamic port from the service
-        SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:${{ job.services.mysql.ports['3306'] }}/testdb
-        SPRING_DATASOURCE_USERNAME: root
-        SPRING_DATASOURCE_PASSWORD: test
-      run: mvn test -Pintegration-tests -pl ${SERVICES//,/ }
-      shell: bash
+          echo "Creating test database..."
+          mysql -h 127.0.0.1 -P "$MYSQL_PORT" -uroot -ptest -e "
+            CREATE DATABASE IF NOT EXISTS testdb;
+            GRANT ALL PRIVILEGES ON testdb.* TO 'root'@'%';
+            FLUSH PRIVILEGES;
+          "
+        shell: bash
 
-
+      - name: Run Integration Tests
+        env:
+          SPRING_PROFILES_ACTIVE: integration-test
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:${{ job.services.mysql.ports['3306'] }}/testdb
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: test
+        run: mvn test -Pintegration-tests -pl ${SERVICES//,/ }
+        shell: bash
