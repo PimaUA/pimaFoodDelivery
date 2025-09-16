@@ -80,7 +80,6 @@ jobs:
         run: |
           for service in ${SERVICES//,/ }; do
             echo "Running integration tests for $service..."
-            # Run Maven test command for each service
-            mvn test -Pintegration-tests -pl ":$service"
+            mvn test -Pintegration-tests -pl ":$service" -Dtestcontainers.container.waiting.timeout=180s
           done
         shell: bash
