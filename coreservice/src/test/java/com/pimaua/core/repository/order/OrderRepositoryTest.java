@@ -7,6 +7,7 @@ import com.pimaua.core.entity.customer.Customer;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import com.pimaua.core.repository.customer.CustomerRepository;
 import com.pimaua.core.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,6 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration")
 public class OrderRepositoryTest extends BaseRepositoryTest {
     @Autowired
     OrderRepository orderRepository;

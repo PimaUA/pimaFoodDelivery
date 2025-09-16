@@ -2,11 +2,13 @@ package com.pimaua.payment.repository;
 
 import com.pimaua.payment.entity.ProcessedEvent;
 import com.pimaua.payment.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 public class ProcessedEventRepositoryTest extends BaseRepositoryTest {
     @Autowired
     ProcessedEventRepository processedEventRepository;

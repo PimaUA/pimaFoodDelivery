@@ -3,6 +3,7 @@ package com.pimaua.core.repository.restaurant;
 import com.pimaua.core.entity.restaurant.Menu;
 import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration")
 public class MenuRepositoryTest extends BaseRepositoryTest {
     @Autowired
     MenuRepository menuRepository;

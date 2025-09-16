@@ -12,6 +12,7 @@ import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import com.pimaua.core.repository.restaurant.MenuRepository;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
 import com.pimaua.core.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration")
 public class OrderItemRepositoryTest extends BaseRepositoryTest {
     @Autowired
     OrderItemRepository orderItemRepository;

@@ -2,6 +2,7 @@ package com.pimaua.payment.repository;
 
 import com.pimaua.payment.entity.StripeCustomer;
 import com.pimaua.payment.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration")
 public class StripeCustomerRepositoryTest extends BaseRepositoryTest {
     @Autowired
     StripeCustomerRepository stripeCustomerRepository;

@@ -4,6 +4,7 @@ import com.pimaua.core.entity.enums.DayOfWeek;
 import com.pimaua.core.entity.restaurant.OpeningHours;
 import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 public class OpeningHoursRepositoryTest extends BaseRepositoryTest {
     @Autowired
     OpeningHoursRepository openingHoursRepository;

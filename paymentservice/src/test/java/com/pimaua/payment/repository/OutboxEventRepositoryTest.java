@@ -4,6 +4,7 @@ import com.pimaua.payment.entity.OutboxEvent;
 import com.pimaua.payment.test.utils.BaseRepositoryTest;
 import com.pimaua.payment.utils.enums.AggregateType;
 import com.pimaua.payment.utils.enums.OrderStatus;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 public class OutboxEventRepositoryTest extends BaseRepositoryTest {
     @Autowired
     OutboxEventRepository outboxEventRepository;

@@ -2,6 +2,7 @@ package com.pimaua.auth.repository;
 
 import com.pimaua.auth.entity.Users;
 import com.pimaua.auth.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration")
 public class UsersRepositoryTest extends BaseRepositoryTest {
     @Autowired
     UsersRepository usersRepository;

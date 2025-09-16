@@ -10,7 +10,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>deliveryService</artifactId>
+	<artifactId>deliveryservice</artifactId>
 	<name>deliveryService</name>
 	<description>Delivery Microservice</description>
 

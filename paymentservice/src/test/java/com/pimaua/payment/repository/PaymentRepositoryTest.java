@@ -4,6 +4,7 @@ import com.pimaua.payment.entity.Payment;
 import com.pimaua.payment.utils.enums.PaymentStatus;
 import com.pimaua.payment.test.utils.BaseRepositoryTest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 public class PaymentRepositoryTest extends BaseRepositoryTest {
     @Autowired
     PaymentRepository paymentRepository;

@@ -6,6 +6,7 @@ import com.pimaua.delivery.entity.LiveDriverLocationId;
 import com.pimaua.delivery.entity.enums.DriverStatus;
 import com.pimaua.delivery.entity.enums.VehicleType;
 import com.pimaua.delivery.test.utils.BaseRepositoryTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,6 +17,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration")
 public class LiveDriverLocationRepositoryTest extends BaseRepositoryTest {
     @Autowired
     LiveDriverLocationRepository liveDriverLocationRepository;

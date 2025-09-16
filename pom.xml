@@ -15,9 +15,9 @@
     </parent>
 
     <modules>
-        <module>authService</module>
+        <module>authservice</module>
         <module>coreservice</module>
-        <module>deliveryService</module>
+        <module>deliveryservice</module>
         <module>paymentservice</module>
     </modules>
 
@@ -159,4 +159,28 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Run only unit tests -->
+        <profile>
+            <id>unit-tests</id>
+            <properties>
+                <groups>unit</groups>
+            </properties>
+        </profile>
+        <!-- Run only integration tests -->
+        <profile>
+            <id>integration-tests</id>
+            <properties>
+                <groups>integration</groups>
+            </properties>
+        </profile>
+        <!-- Run both unit + integration -->
+        <profile>
+            <id>all-tests</id>
+            <properties>
+                <groups>unit,integration</groups>
+            </properties>
+        </profile>
+    </profiles>
 </project>
