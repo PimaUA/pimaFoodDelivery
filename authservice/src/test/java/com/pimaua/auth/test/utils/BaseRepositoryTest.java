@@ -30,5 +30,6 @@ public abstract class BaseRepositoryTest {
         registry.add("spring.datasource.password", mysql::getPassword);
         registry.add("spring.datasource.driver-class-name", mysql::getDriverClassName);
         registry.add("spring.flyway.enabled", () -> "false");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
     }
 }
