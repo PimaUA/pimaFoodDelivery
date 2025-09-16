@@ -7,9 +7,12 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
+      initialization-fail-timeout: 60000
       connection-timeout: 60000
+      max-lifetime: 30000
+      minimum-idle: 0
       maximum-pool-size: 5
-      max-lifetime: 120000
+
 
 
 
