@@ -73,5 +73,8 @@ jobs:
           java-version: 17
           cache: maven
 
+      - name: Verify Docker availability
+        run: docker version
+
       - name: Run Repository Integration Tests
-        run: mvn test -Pintegration-tests -pl ${{ env.SERVICES }}
+        run: mvn test -Pintegration-tests -Dspring.profiles.active=test -pl ${{ env.SERVICES }}
