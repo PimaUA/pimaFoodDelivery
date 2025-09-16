@@ -14,9 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
       - uses: docker/setup-buildx-action@v2
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -24,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Run unit tests
-        run: mvn -pl coreservice,paymentservice test -Punit-tests
+        run: mvn -pl coreservice,paymentservice,authservice,deliveryservice test -Punit-tests
 
       - name: Package microservices
         run: mvn -B package -DskipTests
@@ -38,7 +36,7 @@ jobs:
       - name: Build and push Docker images
         if: github.event_name == 'push'
         run: |
-          for service in coreservice paymentservice; do
+          for service in coreservice paymentservice authservice deliveryservice; do
             IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/$service
             echo "Building and pushing $IMAGE:latest"
             docker build -t $IMAGE:latest $service
@@ -58,43 +56,45 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -ptest --silent"
+          --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=30
-
-    env:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/testdb
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: test
-
+          --health-retries=3
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
           cache: maven
 
+      # Install MySQL client tools
       - name: Install MySQL Client
         run: |
           sudo apt-get update
-          sudo apt-get install -y mysql-client         
+          sudo apt-get install -y mysql-client
 
       - name: Wait for MySQL
         run: |
           echo "Waiting for MySQL to be ready..."
-          for i in {1..60}; do
-            if mysqladmin ping -h mysql -uroot -ptest --silent; then
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "MySQL not ready yet... retrying ($i/60)"
-            sleep 5
+            echo "MySQL not ready yet... retrying ($i/30)"
+            sleep 2
           done
+          
           # Verify we can actually connect and query
-          mysql -h mysql -uroot -ptest -e "SELECT 1;" testdb
+          mysql -h 127.0.0.1 -uroot -ptest -e "SELECT 1;" testdb
 
       - name: Run Integration Tests
         run: mvn -pl coreservice,paymentservice,authservice,deliveryservice verify -Pintegration-tests
+        env:
+          # Make database connection details available to tests
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: testdb
+          DB_USER: root
+          DB_PASSWORD: test
