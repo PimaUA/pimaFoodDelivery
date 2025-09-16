@@ -1,9 +1,14 @@
 server:
-  port: 8080
+  port: 8090
 spring:
   application:
-    name: "authservice"
+    name: "deliveryservice"
 
+  datasource:
+    url: jdbc:mysql://localhost:3308/deliveryservicedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
     hibernate:

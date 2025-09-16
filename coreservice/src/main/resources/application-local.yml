@@ -1,9 +1,14 @@
 server:
-  port: 9000
+  port: 8081
 spring:
   application:
-    name: "paymentservice"
+    name: "coreservice"
 
+  datasource:
+    url: jdbc:mysql://localhost:3306/coreservicedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
     hibernate:
@@ -16,18 +21,14 @@ spring:
     baseline-on-migrate: true
     connect-retries: 5
 
-# feign to be removed when deploy to k8s
   cloud:
-    openfeign:
-      client:
-        config:
-          order-service:
-            url: http://localhost:8081
-
     stream:
+      function:
+        definition: orderStatus
       bindings:
-        orderStatus-out-0:   # producer binding
+        orderStatus-in-0: #consumer binding
           destination: send-status
+          group: ${spring.application.name}
           content-type: application/json
 
   rabbitmq:
@@ -36,12 +37,3 @@ spring:
     username: guest
     password: guest
     connection-timeout: 10s
-
-stripe:
-  secret-key: ${STRIPE_SECRET_KEY}
-  publishable-key: ${STRIPE_PUBLISHABLE_KEY}
-  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
-
-
-
-

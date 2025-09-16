@@ -9,8 +9,6 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Duration;
-
 @Testcontainers
 @DataJpaTest
 @ActiveProfiles("test")
@@ -23,14 +21,8 @@ public abstract class BaseRepositoryTest {
             .withUsername("test")
             .withPassword("test");
 
-    // Explicitly start container before Spring loads context
-    static {
-        mysql.start();
-    }
-
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        // These are now safe because container is already started
         registry.add("spring.datasource.url", mysql::getJdbcUrl);
         registry.add("spring.datasource.username", mysql::getUsername);
         registry.add("spring.datasource.password", mysql::getPassword);
