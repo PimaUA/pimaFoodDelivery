@@ -68,6 +68,18 @@ jobs:
           java-version: 17
           cache: maven
 
+      - name: Wait for MySQL
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready yet... retrying ($i/30)"
+            sleep 2
+          done
+
       - name: Run Integration Tests
         run: mvn -pl coreservice,paymentservice,authservice,deliveryservice verify -Pintegration-tests
 
