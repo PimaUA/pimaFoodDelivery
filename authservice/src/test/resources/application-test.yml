@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+
+

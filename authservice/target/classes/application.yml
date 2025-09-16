@@ -4,11 +4,6 @@ spring:
   application:
     name: "authservice"
 
-  datasource:
-    url: jdbc:mysql://localhost:3307/authservicedb
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
     hibernate:
