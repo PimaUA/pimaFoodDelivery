@@ -36,6 +36,16 @@ jobs:
       - name: Package Microservices
         run: mvn clean package -DskipTests -pl ${{ env.SERVICES }}
 
+      - name: Upload Packaged Microservices
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-microservices
+          path: |
+            coreservice/target/coreservice-*.jar
+            paymentservice/target/paymentservice-*.jar
+            authservice/target/authservice-*.jar
+            deliveryservice/target/deliveryservice-*.jar
+
       - name: Log in to Docker Hub
         if: github.event_name == 'push'
         uses: docker/login-action@v3
@@ -72,15 +82,15 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent"
-          --health-interval=10s
+          --health-interval=5s
           --health-timeout=5s
-          --health-retries=30
+          --health-retries=60
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download Artifacts
+      - name: Download Packaged Microservices
         uses: actions/download-artifact@v4
         with:
           name: packaged-microservices
@@ -93,28 +103,52 @@ jobs:
           cache: maven
 
       - name: Install MySQL Client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mysql-client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
         shell: bash
 
       - name: Wait for MySQL
         run: |
           echo "Waiting for MySQL to be ready..."
-          for i in {1..30}; do
+          for i in {1..60}; do
             if mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "Waiting for MySQL... (Attempt $i/30)"
+            echo "Waiting for MySQL... (Attempt $i/60)"
             sleep 2
           done
-          
+
           if ! mysqladmin ping -h 127.0.0.1 -uroot -ptest --silent; then
-            echo "MySQL failed to start after multiple attempts."
+            echo "MySQL failed to start"
             exit 1
           fi
         shell: bash
 
-      - name: Run Integration Tests
-        run: mvn test -Pintegration-tests -pl ${{ env.SERVICES }}
+      - name: Initialize Database (Optional)
+        run: |
+          echo "Setting up database..."
+          # mysql -h 127.0.0.1 -uroot -ptest testdb < path/to/your-schema.sql
+        shell: bash
+
+      - name: Start Microservices
+        run: |
+          echo "Starting microservices in background..."
+          java -jar ./coreservice/target/coreservice-*.jar &
+          PID_CORE=$!
+          java -jar ./paymentservice/target/paymentservice-*.jar &
+          PID_PAYMENT=$!
+          java -jar ./authservice/target/authservice-*.jar &
+          PID_AUTH=$!
+          java -jar ./deliveryservice/target/deliveryservice-*.jar &
+          PID_DELIVERY=$!
+
+          echo "Waiting for services to be ready..."
+          # Optional: replace with proper health checks
+          sleep 30
+
+          # Run integration tests
+          mvn test -Pintegration-tests -pl ${{ env.SERVICES }}
+
+          # Kill microservices after tests
+          kill $PID_CORE $PID_PAYMENT $PID_AUTH $PID_DELIVERY
+        shell: bash
