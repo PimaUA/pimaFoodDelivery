@@ -1,7 +1,15 @@
 spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/testdb  # placeholder, will be overridden by Testcontainers
+    username: test                           # placeholder, overridden by Testcontainers
+    password: test                           # placeholder, overridden by Testcontainers
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create-drop                  # ensures schema is created/dropped for tests
     show-sql: true
+
   flyway:
-    enabled: false
+    enabled: false                            # disable Flyway during integration tests
+
