@@ -2,7 +2,6 @@ package com.pimaua.auth.test.utils;
 
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.MySQLContainer;
@@ -12,9 +11,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 
-@SpringBootTest
 @Testcontainers
-//@DataJpaTest
+@DataJpaTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class BaseRepositoryTest {
@@ -29,4 +27,8 @@ public abstract class BaseRepositoryTest {
             .withStartupTimeout(Duration.ofMinutes(5))
             .waitingFor(Wait.forLogMessage(".*ready for connections.*", 2)) // Wait for MySQL to be fully ready
             .withStartupAttempts(3); // Retry if startup fails
+
+    static {
+        mysql.start();
+    }
 }
