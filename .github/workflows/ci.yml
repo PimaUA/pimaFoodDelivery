@@ -73,16 +73,6 @@ jobs:
           java-version: 17
           cache: maven
 
-      - name: Verify Docker availability
-        run: docker version
-
-      - name: Enable Testcontainers reuse
-        run: |
-          mkdir -p ~/.testcontainers
-          echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
-          echo "Testcontainers reuse enabled:"
-          cat ~/.testcontainers.properties
-
       - name: Run Integration Tests
         run: |
           for service in ${SERVICES//,/ }; do

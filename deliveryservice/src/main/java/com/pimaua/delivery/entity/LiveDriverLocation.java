@@ -3,8 +3,6 @@ package com.pimaua.delivery.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Entity
 @Getter
 @Setter
@@ -20,6 +18,6 @@ public class LiveDriverLocation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id",nullable = false)
     private Driver driver;
-    private BigDecimal latitude;
-    private BigDecimal longitude;
+    private Double latitude;
+    private Double longitude;
 }

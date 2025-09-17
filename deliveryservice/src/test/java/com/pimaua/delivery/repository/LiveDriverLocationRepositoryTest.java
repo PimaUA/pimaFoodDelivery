@@ -41,6 +41,7 @@ public class LiveDriverLocationRepositoryTest{
 
     @Test
     void saveAndFindLiveDeliveryLocation() {
+        // Create and save driver
         Driver driver = Driver.builder()
                 .userId(1)
                 .name("John")
@@ -49,25 +50,25 @@ public class LiveDriverLocationRepositoryTest{
                 .driverLocation("Kyiv")
                 .updatedAt(LocalDateTime.now())
                 .build();
-
         Driver savedDriver = driversRepository.save(driver);
 
+        // Create live driver location
         LocalDateTime timestamp = LocalDateTime.now();
         LiveDriverLocationId locationId = new LiveDriverLocationId(savedDriver.getId(), timestamp);
 
         LiveDriverLocation liveDriverLocation = LiveDriverLocation.builder()
                 .liveDriverLocationId(locationId)
                 .driver(savedDriver)
-                .latitude(BigDecimal.valueOf(50.4501))
-                .longitude(BigDecimal.valueOf(30.5234))
+                .latitude(50.4501)
+                .longitude(30.5234)
                 .build();
+        liveDriverLocationRepository.save(liveDriverLocation);
 
-        LiveDriverLocation savedLiveDriverLocation = liveDriverLocationRepository.save(liveDriverLocation);
-
-        Optional<LiveDriverLocation> foundLiveDriverLocation = liveDriverLocationRepository.findByDriver(savedDriver);
-        assertTrue(foundLiveDriverLocation.isPresent());
-        assertEquals(savedDriver.getName(), foundLiveDriverLocation.get().getDriver().getName());
-        assertEquals(BigDecimal.valueOf(50.4501).stripTrailingZeros(), foundLiveDriverLocation.get().getLatitude().stripTrailingZeros());
-        assertEquals(BigDecimal.valueOf(30.5234).stripTrailingZeros(), foundLiveDriverLocation.get().getLongitude().stripTrailingZeros());
+        // Fetch and assert
+        Optional<LiveDriverLocation> found = liveDriverLocationRepository.findByDriver(savedDriver);
+        assertTrue(found.isPresent());
+        assertEquals(savedDriver.getName(), found.get().getDriver().getName());
+        assertEquals(50.4501, found.get().getLatitude(), 0.000001);
+        assertEquals(30.5234, found.get().getLongitude(), 0.000001);
     }
 }
