@@ -4,6 +4,11 @@ spring:
   application:
     name: "coreservice"
 
+  datasource:
+    url: jdbc:mysql://localhost:3306/coreservicedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
     hibernate:

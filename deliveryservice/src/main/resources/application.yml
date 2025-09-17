@@ -4,6 +4,11 @@ spring:
   application:
     name: "deliveryservice"
 
+  datasource:
+    url: jdbc:mysql://localhost:3308/deliveryservicedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
     hibernate:

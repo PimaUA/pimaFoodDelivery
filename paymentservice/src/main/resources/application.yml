@@ -4,6 +4,11 @@ spring:
   application:
     name: "paymentservice"
 
+  datasource:
+    url: jdbc:mysql://localhost:3309/paymentservicedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
     hibernate:
