@@ -5,6 +5,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -23,5 +24,7 @@ public abstract class BaseRepositoryTest {
             .withUsername("test")
             .withPassword("test")
             .withReuse(false)
-            .withStartupTimeout(Duration.ofMinutes(5));
+            .withStartupTimeout(Duration.ofMinutes(5))
+            .waitingFor(Wait.forLogMessage(".*ready for connections.*", 2)) // Wait for MySQL to be fully ready
+            .withStartupAttempts(3); // Retry if startup fails
 }
