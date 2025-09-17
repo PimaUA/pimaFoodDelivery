@@ -2,16 +2,17 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    show-sql: true
   flyway:
     enabled: false
   datasource:
-    type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      initialization-fail-timeout: 60000
-      connection-timeout: 60000
-      max-lifetime: 30000
-      minimum-idle: 0
       maximum-pool-size: 5
+      minimum-idle: 1
+      max-lifetime: 1800000    # 30 min (longer than container lifespan)
+      connection-timeout: 30000
+      validation-timeout: 5000
+
 
 
 

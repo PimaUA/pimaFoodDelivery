@@ -24,5 +24,6 @@ public abstract class BaseRepositoryTest {
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
-            .withStartupTimeout(Duration.ofMinutes(2));
+            .withReuse(false)
+            .withStartupTimeout(Duration.ofMinutes(5));
 }
