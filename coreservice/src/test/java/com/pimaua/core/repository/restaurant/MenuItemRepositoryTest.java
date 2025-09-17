@@ -3,10 +3,15 @@ package com.pimaua.core.repository.restaurant;
 import com.pimaua.core.entity.restaurant.Menu;
 import com.pimaua.core.entity.restaurant.MenuItem;
 import com.pimaua.core.entity.restaurant.Restaurant;
-import com.pimaua.core.test.utils.BaseRepositoryTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -14,14 +19,24 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Testcontainers
+@DataJpaTest
+@ActiveProfiles("test")
 @Tag("integration")
-public class MenuItemRepositoryTest extends BaseRepositoryTest {
+public class MenuItemRepositoryTest{
     @Autowired
     MenuItemRepository menuItemRepository;
     @Autowired
     MenuRepository menuRepository;
     @Autowired
     RestaurantRepository restaurantRepository;
+
+    @Container
+    @ServiceConnection
+    static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
 
     @Test
     void testSaveAndFindMenuItem(){

@@ -2,11 +2,16 @@ package com.pimaua.payment.repository;
 
 import com.pimaua.payment.entity.Payment;
 import com.pimaua.payment.utils.enums.PaymentStatus;
-import com.pimaua.payment.test.utils.BaseRepositoryTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,8 +19,11 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
+@DataJpaTest
+@ActiveProfiles("test")
 @Tag("integration")
-public class PaymentRepositoryTest extends BaseRepositoryTest {
+public class PaymentRepositoryTest{
     @Autowired
     PaymentRepository paymentRepository;
 
@@ -34,6 +42,13 @@ public class PaymentRepositoryTest extends BaseRepositoryTest {
 
         paymentRepository.save(defaultPayment);
     }
+
+    @Container
+    @ServiceConnection
+    static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
 
     @Test
     void saveAndFindPayment(){

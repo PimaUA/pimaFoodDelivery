@@ -1,4 +1,4 @@
-package com.pimaua.auth.test.utils;
+/*package com.pimaua.auth.test.utils;
 
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -23,12 +23,7 @@ public abstract class BaseRepositoryTest {
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(false) // avoid stale containers between tests
             .withStartupTimeout(Duration.ofMinutes(5))
             .waitingFor(Wait.forLogMessage(".*ready for connections.*", 2)) // Wait for MySQL to be fully ready
             .withStartupAttempts(3); // Retry if startup fails
-
-    static {
-        mysql.start();
-    }
-}
+}*/
