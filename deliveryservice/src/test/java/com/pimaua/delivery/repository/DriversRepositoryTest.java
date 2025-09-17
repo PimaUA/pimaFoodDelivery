@@ -36,6 +36,7 @@ public class DriversRepositoryTest{
 
     @Test
     void saveAndFindDriver(){
+        // Given: create and save a Driver
         Driver driver = Driver.builder()
                 .userId(1)
                 .name("John")
@@ -44,10 +45,12 @@ public class DriversRepositoryTest{
                 .driverLocation("Kyiv")
                 .updatedAt(LocalDateTime.now())
                 .build();
-
         driversRepository.save(driver);
 
+        // When: search for the Driver by name
         Optional<Driver>foundDriver=driversRepository.findByName("John");
+
+        // Then: verify the Driver is found and has the expected name
         assertTrue(foundDriver.isPresent());
         assertEquals("John",foundDriver.get().getName());
     }

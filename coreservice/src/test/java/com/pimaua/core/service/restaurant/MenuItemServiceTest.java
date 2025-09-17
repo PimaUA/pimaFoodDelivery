@@ -4,11 +4,11 @@ import com.pimaua.core.dto.restaurant.MenuItemRequestDto;
 import com.pimaua.core.dto.restaurant.MenuItemResponseDto;
 import com.pimaua.core.entity.restaurant.Menu;
 import com.pimaua.core.entity.restaurant.MenuItem;
-import com.pimaua.core.entity.restaurant.Restaurant;
 import com.pimaua.core.exception.custom.notfound.MenuItemNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuItemMapper;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
 import com.pimaua.core.repository.restaurant.MenuRepository;
+import com.pimaua.core.service.restaurant.testdata.MenuItemTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -21,8 +21,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,55 +53,25 @@ public class MenuItemServiceTest {
 
     @BeforeEach
     void setup() {
-        Restaurant restaurant = Restaurant.builder()
-                .name("Some Restaurant")
-                .address("Some Address")
-                .build();
-
-        Menu menu = Menu.builder()
-                .name("Lunch Menu")
-                .restaurant(restaurant)
-                .build();
-
-        menuItem = MenuItem.builder()
-                .id(1)
-                .name("Water")
-                .description("Some water")
-                .price(BigDecimal.valueOf(10.0))
-                .isAvailable(true)
-                .menu(menu)
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        menuItemRequestDto = MenuItemRequestDto.builder()
-                .name("Water")
-                .description("Some water")
-                .price(BigDecimal.valueOf(10.0))
-                .isAvailable(true)
-                .build();
-
-        menuItemResponseDto = MenuItemResponseDto.builder()
-                .id(1)
-                .name("Water")
-                .description("Some water")
-                .price(BigDecimal.valueOf(10.0))
-                .isAvailable(true)
-                .updatedAt(LocalDateTime.now())
-                .build();
+        menuItem = MenuItemTestData.mockMenuItem();
+        menuItemRequestDto = MenuItemTestData.mockMenuItemRequestDto();
+        menuItemResponseDto = MenuItemTestData.mockMenuItemResponseDto();
     }
 
     @Test
     void createMenuItem_Success() {
-        // given
+        // Where / Given: a valid menu ID and MenuItemRequestDto
         Integer menuId = menuItem.getMenu().getId(); // assuming menu has an id
         Menu menu = menuItem.getMenu(); // use the menu from setup
         when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
         when(menuItemMapper.toEntity(menuItemRequestDto)).thenReturn(menuItem);
         when(menuItemRepository.save(menuItem)).thenReturn(menuItem);
         when(menuItemMapper.toDto(menuItem)).thenReturn(menuItemResponseDto);
-        // when
+
+        // When: create is called
         MenuItemResponseDto result = menuItemService.create(menuId, menuItemRequestDto);
-        // then
+
+        // Then: verify result, mappings, and menu set
         assertNotNull(result);
         assertEquals(menuItemResponseDto.getId(), result.getId());
         assertEquals(menuItemResponseDto.getName(), result.getName());
@@ -118,18 +86,20 @@ public class MenuItemServiceTest {
 
     @Test
     void createMenuItem_RepositoryException() {
-        // given
+        // Where / Given: repository throws exception
         Integer menuId = menuItem.getMenu().getId();
         Menu menu = menuItem.getMenu();
         when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
         when(menuItemMapper.toEntity(menuItemRequestDto)).thenReturn(menuItem);
         when(menuItemRepository.save(menuItem)).thenThrow(new RuntimeException("Database error"));
-        // when & then
+
+        // When & Then: exception is thrown
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             menuItemService.create(menuId, menuItemRequestDto);
         });
         assertEquals("Database error", exception.getMessage());
-        // verify interactions
+
+        // Then: verify interactions
         verify(menuRepository).findById(menuId);
         verify(menuItemMapper).toEntity(menuItemRequestDto);
         verify(menuItemRepository).save(menuItem);
@@ -138,20 +108,21 @@ public class MenuItemServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     void findAll_Success() {
-        // given
+        // Where / Given: repository returns one page of menu items
         Page<MenuItem> menuItemsPage = new PageImpl<>(List.of(menuItem));
         Page<MenuItemResponseDto> responseDtosPage = new PageImpl<>(List.of(menuItemResponseDto));
         when(menuItemRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(menuItemsPage);
         when(menuItemMapper.toPageDto(menuItemsPage)).thenReturn(responseDtosPage);
-        // when
+
+        // When: findAllByMenuId is called
         Page<MenuItemResponseDto> result =
                 menuItemService.findAllByMenuId(1, Pageable.unpaged(), "Water", true);
-        // then
+
+        // Then: verify result and interactions
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals(menuItemResponseDto, result.getContent().get(0));
-
         verify(menuItemRepository).findAll(any(Specification.class), any(Pageable.class));
         verify(menuItemMapper).toPageDto(menuItemsPage);
     }
@@ -159,16 +130,18 @@ public class MenuItemServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     void findAll_EmptyList() {
-        // given
+        // Where / Given: repository returns an empty page of MenuItems
         Page<MenuItem> emptyMenuItemsPage = Page.empty();
         Page<MenuItemResponseDto> emptyDtosPage = Page.empty();
         when(menuItemRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(emptyMenuItemsPage);
         when(menuItemMapper.toPageDto(emptyMenuItemsPage)).thenReturn(emptyDtosPage);
-        // when
+
+        // When: findAllByMenuId is called with no filters
         Page<MenuItemResponseDto> result =
                 menuItemService.findAllByMenuId(1, Pageable.unpaged(), null, true);
-        // then
+
+        // Then: result is not null and empty, repository and mapper called
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(menuItemRepository).findAll(any(Specification.class), any(Pageable.class));
@@ -178,21 +151,24 @@ public class MenuItemServiceTest {
     //findById tests
     @Test
     void findById_Success() {
-        //given
+        // Where / Given: menu item exists
         when(menuItemRepository.findById(2)).thenReturn(Optional.of(menuItem));
         when(menuItemMapper.toDto(menuItem)).thenReturn(menuItemResponseDto);
-        //when
+
+        // When: findById is called
         MenuItemResponseDto result = menuItemService.findById(2);
-        //then
+
+        // Then: result matches expected
         assertNotNull(result);
         assertEquals(menuItemResponseDto, result);
     }
 
     @Test
     void findById_MenuItemNotFound() {
-        //given
+        // Where / Given: menu item does not exist
         when(menuItemRepository.findById(anyInt())).thenReturn(Optional.empty());
-        //when&then
+
+        // When & Then: exception is thrown
         MenuItemNotFoundException exception = assertThrows(MenuItemNotFoundException.class, () -> {
             menuItemService.findById(999);
         });
@@ -202,16 +178,17 @@ public class MenuItemServiceTest {
     //update MenuItem tests
     @Test
     void updateMenuItem_Success() {
-        // Given
+        // Where / Given: menu item exists and valid update DTO
         when(menuItemRepository.findById(1)).thenReturn(Optional.of(menuItem));
         when(menuItemRepository.save(menuItem)).thenReturn(menuItem);
         when(menuItemMapper.toDto(menuItem)).thenReturn(menuItemResponseDto);
-        // When
+
+        // When: update is called
         MenuItemResponseDto result = menuItemService.update(1, menuItemRequestDto);
-        // Then
+
+        // Then: result is correct and repository/mapping called
         assertNotNull(result);
         assertEquals(menuItemResponseDto, result);
-        // interaction verification
         verify(menuItemRepository).findById(1);
         verify(menuItemRepository).save(menuItem);
         verify(menuItemMapper).toDto(menuItem);
@@ -219,21 +196,27 @@ public class MenuItemServiceTest {
 
     @Test
     void updateMenuItem_MenuItemNotFound() {
-        // Given
+        // Where / Given: the repository does not find a MenuItem with the given ID
         when(menuItemRepository.findById(anyInt())).thenReturn(Optional.empty());
-        // When & Then
+
+        // When: update is called on a non-existent MenuItem
+        // Then: MenuItemNotFoundException is thrown with the correct message
         MenuItemNotFoundException exception = assertThrows(MenuItemNotFoundException.class, () -> {
             menuItemService.update(999, menuItemRequestDto);
         });
+
+        // Then: verify exception message
         assertEquals("MenuItem not found with ID 999", exception.getMessage());
     }
 
     @Test
     void updateMenuItem_RepositoryException() {
-        // Given
+        // Where / Given: repository finds the MenuItem but throws an exception on save
         when(menuItemRepository.findById(1)).thenReturn(Optional.of(menuItem));
         when(menuItemRepository.save(menuItem)).thenThrow(new RuntimeException("Database error"));
-        // When & Then
+
+        // When: update is called
+        // Then: RuntimeException is thrown
         assertThrows(RuntimeException.class, () -> {
             menuItemService.update(1, menuItemRequestDto);
         });
@@ -242,23 +225,29 @@ public class MenuItemServiceTest {
     //delete MenuItem tests
     @Test
     void deleteMenuItem_Success() {
-        // Given
+        // Where / Given: menu item exists
         when(menuItemRepository.findById(1)).thenReturn(Optional.of(menuItem));
-        // When
+
+        // When: delete is called
         menuItemService.delete(1);
-        // Then
+
+        // Then: repository delete is called
         verify(menuItemRepository).findById(1);
         verify(menuItemRepository).delete(menuItem);
     }
 
     @Test
     void deleteMenuItem_MenuItemNotFound() {
-        // Given
+        // Where / Given: repository does not contain a MenuItem with the given ID
         when(menuItemRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
-        // When & Then
+
+        // When: delete is called with a non-existent MenuItem ID
+        // Then: MenuItemNotFoundException is thrown
         MenuItemNotFoundException exception = assertThrows(MenuItemNotFoundException.class, () -> {
             menuItemService.delete(999);
         });
+
+        // Then: exception message is verified and repository delete is never called
         assertEquals("MenuItem not found with ID 999", exception.getMessage());
         verify(menuItemRepository).findById(999);
         verify(menuItemRepository, never()).delete(any(MenuItem.class));
@@ -266,14 +255,17 @@ public class MenuItemServiceTest {
 
     @Test
     void deleteMenuItem_RepositoryException() {
-        // Given
+        // Where / Given: repository contains the MenuItem but delete operation throws a RuntimeException
         when(menuItemRepository.findById(1)).thenReturn(Optional.of(menuItem));
         doThrow(new RuntimeException("Database error")).when(menuItemRepository).delete(menuItem);
-        // When & Then
+
+        // When: delete is called
+        // Then: RuntimeException is thrown
         assertThrows(RuntimeException.class, () -> {
             menuItemService.delete(1);
         });
 
+        // Then: verify repository interactions
         verify(menuItemRepository).findById(1);
         verify(menuItemRepository).delete(menuItem);
     }
@@ -281,6 +273,8 @@ public class MenuItemServiceTest {
     //edge cases
     @Test
     void createMenuItem_NullInput_ThrowsIllegalArgumentException() {
+        // Where / Given: null input
+        // When & Then: IllegalArgumentException thrown
         assertThrows(IllegalArgumentException.class, () -> menuItemService.create(1, null));
     }
 }

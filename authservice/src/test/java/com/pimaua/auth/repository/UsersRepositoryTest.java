@@ -34,6 +34,7 @@ public class UsersRepositoryTest{
 
     @Test
     void testSaveAndFindUsers() {
+        // given: a new user entity with email, password, active status, and creation date
         Users user = Users.builder()
                 .email("abc@com")
                 .password("1234")
@@ -41,11 +42,12 @@ public class UsersRepositoryTest{
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        // when: saving the user and searching by email
         Users savedUser = usersRepository.save(user);
-
         Optional<Users> foundUser = usersRepository.findByEmail("abc@com");
+
+        // then: the user is found and has the expected email
         assertTrue(foundUser.isPresent());
         assertEquals("abc@com", foundUser.get().getEmail());
-
     }
 }

@@ -52,9 +52,10 @@ public class PaymentRepositoryTest{
 
     @Test
     void saveAndFindPayment(){
-        //when
+        // When: try to find a Payment by orderId
         Optional<Payment> foundPayment = paymentRepository.findByOrderId(1);
-        //then
+
+        // Then: verify the Payment exists and has expected values
         assertTrue(foundPayment.isPresent());
         assertEquals(1, foundPayment.get().getOrderId());
         assertEquals(BigDecimal.valueOf(25.0), foundPayment.get().getAmount());
@@ -64,18 +65,19 @@ public class PaymentRepositoryTest{
 
     @Test
     void existsByOrderId_Success() {
-        //when
+        // When: check existence of Payment with orderId 1
         Boolean exists = paymentRepository.existsByOrderId(1);
-        //then
+        // Then: verify it exists
         assertTrue(exists);
     }
 
     @Test
     void existsByOrderId_Fault() {
-        // Given - no payment with orderId 999 exists
-        // When
+        // Given: no Payment with orderId 999 exists
+        // When: check existence of Payment with orderId 999
         Boolean exists = paymentRepository.existsByOrderId(999);
-        // Then
+
+        // Then: verify it does not exist
         assertFalse(exists);
     }
 }

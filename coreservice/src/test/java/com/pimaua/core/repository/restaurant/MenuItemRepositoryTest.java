@@ -40,21 +40,21 @@ public class MenuItemRepositoryTest{
 
     @Test
     void testSaveAndFindMenuItem(){
-        // Step 1: Create and save a Restaurant
+        // given: a restaurant
         Restaurant restaurant = Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
                 .build();
         restaurant = restaurantRepository.save(restaurant);
 
-        // Step 2: Create and save a Menu linked to the Restaurant
+        // and: a menu linked to the restaurant
         Menu menu = Menu.builder()
                 .name("Lunch Menu")
                 .restaurant(restaurant)
                 .build();
         menu = menuRepository.save(menu);
 
-        // Step 3: Create and save a MenuItem linked to the Menu
+        // and: a menu item linked to the menu
         MenuItem menuItem = MenuItem.builder()
                 .id(1)
                 .name("Apple Juice")
@@ -63,8 +63,10 @@ public class MenuItemRepositoryTest{
                 .build();
         MenuItem savedMenuItem = menuItemRepository.save(menuItem);
 
-        // Step 4: Find and assert the saved MenuItem
+        // when: searching for the menu item by name
         Optional<MenuItem> foundMenuItem = menuItemRepository.findByName("Apple Juice");
+
+        // then: the menu item is found with the expected name
         assertTrue(foundMenuItem.isPresent());
         assertEquals("Apple Juice", foundMenuItem.get().getName());
     }

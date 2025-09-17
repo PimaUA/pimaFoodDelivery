@@ -41,36 +41,38 @@ public class MenuRepositoryTest{
 
     @Test
     void testSaveAndFindMenu() {
-        // Step 1: Create and save a Restaurant
+        // given: a restaurant
         Restaurant restaurant = Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
                 .build();
         restaurant = restaurantRepository.save(restaurant);
 
-        // Step 2: Create and save a Menu linked to the Restaurant
+        // and: a menu linked to the restaurant
         Menu menu = Menu.builder()
                 .name("Lunch Menu")
                 .restaurant(restaurant)
                 .build();
         menuRepository.save(menu);
 
-        // Step 3: Find and assert the saved Menu
+        // when: searching for the menu by name
         Optional<Menu> foundMenu = menuRepository.findByName("Lunch Menu");
+
+        // then: the menu is found with the expected name
         assertTrue(foundMenu.isPresent());
         assertEquals("Lunch Menu", foundMenu.get().getName());
     }
 
     @Test
     void testFindByRestaurantIdAndIsActiveTrue() {
-        // Step 1: Create and save a Restaurant
+        // given: a restaurant
         Restaurant restaurant = Restaurant.builder()
                 .name("Test Restaurant")
                 .address("Test Address")
                 .build();
         restaurant = restaurantRepository.save(restaurant);
 
-        // Step 2: Create Menus (one active, one inactive)
+        // and: two menus (one active, one inactive)
         Menu activeMenu = Menu.builder()
                 .name("Active Menu")
                 .restaurant(restaurant)
@@ -83,11 +85,11 @@ public class MenuRepositoryTest{
                 .build();
         menuRepository.saveAll(List.of(activeMenu, inactiveMenu));
 
-        // Step 3: Fetch active menus with pageable
+        // when: fetching active menus with pagination
         Pageable pageable = PageRequest.of(0, 10, Sort.by("name"));
         Page<Menu> result = menuRepository.findByRestaurantIdAndIsActiveTrue(restaurant.getId(), pageable);
 
-        // Step 4: Assertions
+        // then: only the active menu is returned
         assertEquals(1, result.getTotalElements());
         assertEquals("Active Menu", result.getContent().get(0).getName());
         assertTrue(result.getContent().get(0).getIsActive());

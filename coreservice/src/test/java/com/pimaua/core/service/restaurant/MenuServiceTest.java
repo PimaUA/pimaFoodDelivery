@@ -1,6 +1,5 @@
 package com.pimaua.core.service.restaurant;
 
-import com.pimaua.core.dto.restaurant.MenuItemRequestDto;
 import com.pimaua.core.dto.restaurant.MenuRequestDto;
 import com.pimaua.core.dto.restaurant.MenuResponseDto;
 import com.pimaua.core.entity.restaurant.Menu;
@@ -11,6 +10,7 @@ import com.pimaua.core.exception.custom.notfound.MenuNotFoundException;
 import com.pimaua.core.mapper.restaurant.MenuMapper;
 import com.pimaua.core.repository.restaurant.MenuRepository;
 import com.pimaua.core.repository.restaurant.RestaurantRepository;
+import com.pimaua.core.service.restaurant.testdata.MenuTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,69 +51,33 @@ public class MenuServiceTest {
     private Menu menu;
     private MenuRequestDto menuRequestDto;
     private MenuResponseDto menuResponseDto;
-    private MenuItem menuItem;
-    private MenuItemRequestDto menuItemRequestDto;
 
     @BeforeEach
     void setup() {
-        Restaurant restaurant = Restaurant.builder()
-                .name("Some Restaurant")
-                .address("Some Address")
-                .build();
-
-        menuItem = MenuItem.builder()
-                .id(1)
-                .name("Pizza")
-                .description("Cheese Pizza")
-                .price(BigDecimal.valueOf(9.99))
-                .build();
-
-        menuItemRequestDto = MenuItemRequestDto.builder()
-                .name("Pizza")
-                .description("Cheese Pizza")
-                .price(BigDecimal.valueOf(9.99))
-                .build();
-
-        menu = Menu.builder()
-                .id(1)
-                .name("Some Restaurant")
-                .isActive(true)
-                .restaurant(restaurant)
-                .menuItems(List.of(menuItem))
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        menuRequestDto = MenuRequestDto.builder()
-                .name("Some Restaurant")
-                .isActive(true)
-                .menuItems(List.of(menuItemRequestDto))
-                .restaurantId(1)
-                .build();
-
-        menuResponseDto = MenuResponseDto.builder()
-                .id(1)
-                .name("Some Restaurant")
-                .isActive(true)
-                .updatedAt(LocalDateTime.now())
-                .build();
+        menu = MenuTestData.mockMenu();
+        menuRequestDto = MenuTestData.mockMenuRequestDto();
+        menuResponseDto = MenuTestData.mockMenuResponseDto();
     }
 
     //CreateMenuTests
     @Test
     void createMenu_Success() {
-        // given
+        // Given: a restaurant exists and a valid menu request
         Restaurant restaurant = menu.getRestaurant();
         when(restaurantRepository.findById(anyInt())).thenReturn(Optional.of(restaurant));
         when(menuMapper.toEntity(menuRequestDto)).thenReturn(menu);
         when(menuRepository.save(menu)).thenReturn(menu);
         when(menuMapper.toDto(menu)).thenReturn(menuResponseDto);
-        // when
-        MenuResponseDto result = menuService.create(1,menuRequestDto);
-        // then
+
+        // When: creating the menu
+        MenuResponseDto result = menuService.create(1, menuRequestDto);
+
+        // Then: result should not be null and fields should match expected
         assertNotNull(result);
         assertEquals(menuResponseDto.getId(), result.getId());
         assertEquals(menuResponseDto.getName(), result.getName());
-        // verify interactions
+
+        // Verify interactions with mocks
         verify(restaurantRepository).findById(anyInt());
         verify(menuMapper).toEntity(menuRequestDto);
         verify(menuRepository).save(menu);
@@ -123,7 +86,10 @@ public class MenuServiceTest {
 
     @Test
     void createMenu_RestaurantNotFound_ThrowsException() {
+        // Given: no restaurant found
         when(restaurantRepository.findById(anyInt())).thenReturn(Optional.empty());
+
+        // When & Then: creating menu throws exception
         MenuItemNotFoundException exception = assertThrows(MenuItemNotFoundException.class, () -> {
             menuService.create(1, menuRequestDto);
         });
@@ -134,28 +100,31 @@ public class MenuServiceTest {
 
     @Test
     void createMenu_RepositoryException() {
-        //given
+        // Given: repository will throw an exception on save
         Restaurant restaurant = menu.getRestaurant(); // get a valid restaurant
         when(restaurantRepository.findById(any())).thenReturn(Optional.of(restaurant));
         when(menuMapper.toEntity(menuRequestDto)).thenReturn(menu);
         when(menuRepository.save(menu)).thenThrow(new RuntimeException("Database error"));
-        //when&then
+
+        // When & Then: creating menu throws RuntimeException
         assertThrows(RuntimeException.class, () -> {
-            menuService.create(1,menuRequestDto);
+            menuService.create(1, menuRequestDto);
         });
     }
 
     @Test
     void findAll_Success() {
-        // given
+        // Given: menu repository returns a page of menus
         Pageable pageable = PageRequest.of(0, 10);
         Page<Menu> menus = new PageImpl<>(List.of(menu), pageable, 1);
         Page<MenuResponseDto> responseDtos = new PageImpl<>(List.of(menuResponseDto), pageable, 1);
         when(menuRepository.findByRestaurantIdAndIsActiveTrue(1, pageable)).thenReturn(menus);
         when(menuMapper.toPageDto(menus)).thenReturn(responseDtos);
-        // when
+
+        // When: fetching all menus
         Page<MenuResponseDto> result = menuService.findAllByRestaurantId(1, true, pageable);
-        // then
+
+        // Then: result matches expected
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals(responseDtos, result);
@@ -163,11 +132,12 @@ public class MenuServiceTest {
 
     @Test
     void findAll_NoResults_ThrowsException() {
-        // given
+        // Given: repository returns empty page
         Pageable pageable = PageRequest.of(0, 10);
         Page<Menu> emptyMenus = Page.empty(pageable);
         when(menuRepository.findByRestaurantIdAndIsActiveTrue(1, pageable)).thenReturn(emptyMenus);
-        // when & then
+
+        // When & Then: service throws exception
         assertThrows(MenuNotFoundException.class,
                 () -> menuService.findAllByRestaurantId(1, true, pageable));
     }
@@ -175,21 +145,24 @@ public class MenuServiceTest {
     //findById tests
     @Test
     void findById_Success() {
-        //given
+        // Given: a menu exists with ID 2
         when(menuRepository.findById(2)).thenReturn(Optional.of(menu));
         when(menuMapper.toDto(menu)).thenReturn(menuResponseDto);
-        //when
+
+        // When: fetching by ID
         MenuResponseDto result = menuService.findById(2);
-        //then
+
+        // Then: result matches expected
         assertNotNull(result);
         assertEquals(menuResponseDto, result);
     }
 
     @Test
     void findById_MenuNotFound() {
-        //given
+        // Given: no menu exists
         when(menuRepository.findById(anyInt())).thenReturn(Optional.empty());
-        //when&then
+
+        // When & Then: fetching non-existent menu throws exception
         MenuNotFoundException exception = assertThrows(MenuNotFoundException.class, () -> {
             menuService.findById(999);
         });
@@ -199,15 +172,15 @@ public class MenuServiceTest {
     //update Menu tests
     @Test
     void updateMenu_Success() {
-        // Given
+        // Given: menu exists and can be updated
         when(menuRepository.findById(1)).thenReturn(Optional.of(menu));
         when(menuRepository.save(menu)).thenReturn(menu);
         when(menuMapper.toDto(menu)).thenReturn(menuResponseDto);
 
-        // When
+        // When: updating menu
         MenuResponseDto result = menuService.update(1, menuRequestDto);
 
-        // Then
+        // Then: result matches expected
         assertNotNull(result);
         assertEquals(menuResponseDto, result);
 
@@ -219,10 +192,10 @@ public class MenuServiceTest {
 
     @Test
     void updateMenu_MenuNotFound() {
-        // Given
+        // Given: menu not found
         when(menuRepository.findById(anyInt())).thenReturn(Optional.empty());
 
-        // When & Then
+        // When & Then: updating throws exception
         MenuNotFoundException exception = assertThrows(MenuNotFoundException.class, () -> {
             menuService.update(999, menuRequestDto);
         });
@@ -231,11 +204,11 @@ public class MenuServiceTest {
 
     @Test
     void updateMenu_RepositoryException() {
-        // Given
+        // Given: repository throws exception on save
         when(menuRepository.findById(1)).thenReturn(Optional.of(menu));
         when(menuRepository.save(menu)).thenThrow(new RuntimeException("Database error"));
 
-        // When & Then
+        // When & Then: update throws RuntimeException
         assertThrows(RuntimeException.class, () -> {
             menuService.update(1, menuRequestDto);
         });
@@ -244,27 +217,26 @@ public class MenuServiceTest {
     //delete Menu tests
     @Test
     void deleteMenu_Success() {
-        // Given
+        // Given: menu exists
         when(menuRepository.findById(1)).thenReturn(Optional.of(menu));
 
-        // When
+        // When: deleting menu
         menuService.delete(1);
 
-        // Then
+        // Then: verify interactions
         verify(menuRepository).findById(1);
         verify(menuRepository).delete(menu);
     }
 
     @Test
     void deleteMenu_MenuNotFound() {
-        // Given
+        // Given: menu does not exist
         when(menuRepository.findById(anyInt())).thenReturn(Optional.empty());
 
-        // When & Then
+        // When & Then: deleting non-existent menu throws exception
         MenuNotFoundException exception = assertThrows(MenuNotFoundException.class, () -> {
             menuService.delete(999);
         });
-
         assertEquals("Menu not found with ID 999", exception.getMessage());
         verify(menuRepository).findById(999);
         verify(menuRepository, never()).delete(any());
@@ -272,15 +244,14 @@ public class MenuServiceTest {
 
     @Test
     void deleteMenu_RepositoryException() {
-        // Given
+        // Given: delete throws exception
         when(menuRepository.findById(1)).thenReturn(Optional.of(menu));
         doThrow(new RuntimeException("Database error")).when(menuRepository).delete(menu);
 
-        // When & Then
+        // When & Then: delete throws RuntimeException
         assertThrows(RuntimeException.class, () -> {
             menuService.delete(1);
         });
-
         verify(menuRepository).findById(1);
         verify(menuRepository).delete(menu);
     }
@@ -288,12 +259,13 @@ public class MenuServiceTest {
     //edge cases
     @Test
     void createMenu_NullInput_ThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> menuService.create(1,null));
+        // When & Then: creating menu with null input throws exception
+        assertThrows(IllegalArgumentException.class, () -> menuService.create(1, null));
     }
 
     @Test
     void createMenu_AssignsIdToNewItems() {
-        // Arrange: item with null ID
+        // Given: menu item without ID
         MenuItem newItem = MenuItem.builder()
                 .id(null)
                 .name("Burger")
@@ -315,9 +287,11 @@ public class MenuServiceTest {
         when(menuMapper.toEntity(menuRequestDto)).thenReturn(menuWithoutIds);
         when(menuRepository.save(any(Menu.class))).thenAnswer(inv -> inv.getArgument(0));
         when(menuMapper.toDto(any(Menu.class))).thenReturn(dto);
-        // Act
+
+        // When: creating menu
         MenuResponseDto result = menuService.create(1, menuRequestDto);
-        // Assert
+
+        // Then: menu item should get generated ID
         assertNotNull(result);
         assertEquals(dto.getId(), result.getId());
         assertNotNull(menuWithoutIds.getMenuItems().get(0).getId(), "New item should have generated ID");
@@ -325,7 +299,7 @@ public class MenuServiceTest {
 
     @Test
     void updateMenu_PreservesAndGeneratesItemIds() {
-        // Arrange: one item has ID, one doesn’t
+        // Given: menu has one existing item with ID and one new item without ID
         MenuItem existingItem = MenuItem.builder()
                 .id(10)
                 .name("Pizza")
@@ -340,9 +314,11 @@ public class MenuServiceTest {
         when(menuRepository.findById(1)).thenReturn(Optional.of(menu));
         when(menuRepository.save(menu)).thenReturn(menu);
         when(menuMapper.toDto(menu)).thenReturn(menuResponseDto);
-        // Act
+
+        // When: updating menu
         MenuResponseDto result = menuService.update(1, menuRequestDto);
-        // Assert
+
+        // Then: new item gets ID, existing item preserves ID, updatedAt is refreshed
         assertNotNull(result);
         assertNotNull(newItem.getId(), "New item should get a generated ID");
         assertEquals(10, existingItem.getId(), "Existing item ID should be preserved");

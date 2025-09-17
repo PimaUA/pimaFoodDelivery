@@ -30,15 +30,15 @@ public class ProcessedEventRepositoryTest{
 
     @Test
     void saveProcessedEvent_Success(){
-        //given
+        // Given:  create a ProcessedEvent with a specific ID
         ProcessedEvent processedEvent = ProcessedEvent.builder()
                 .id("12345")
                 .build();
 
-        //when
+        // When: save the ProcessedEvent
         ProcessedEvent savedProcessedEvent =processedEventRepository.save(processedEvent);
 
-        //then
+        // Then: verify it was saved and can be found by ID
         assertNotNull(savedProcessedEvent.getId());
         assertEquals("12345", savedProcessedEvent.getId());
         boolean exists = processedEventRepository.existsById("12345");

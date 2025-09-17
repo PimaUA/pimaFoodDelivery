@@ -34,7 +34,7 @@ public class OutboxEventRepositoryTest{
 
     @Test
     void findByProcessedFalseTest() {
-        // Given
+        // Given: create an unprocessed OutboxEvent
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateType(AggregateType.ORDER)
                 .aggregateId("order-123")
@@ -44,11 +44,11 @@ public class OutboxEventRepositoryTest{
                 .retryCount(0)
                 .build();
 
-        // When
+        // When: save the event and fetch unprocessed events
         OutboxEvent savedOutboxEvent = outboxEventRepository.save(outboxEvent);
         List<OutboxEvent> unprocessedEvents = outboxEventRepository.findByProcessedFalse();
 
-        // Then
+        // Then: verify the saved event is returned and marked as unprocessed
         assertNotNull(savedOutboxEvent.getId());
         assertEquals(1, unprocessedEvents.size());
         assertEquals(savedOutboxEvent.getId(), unprocessedEvents.get(0).getId());

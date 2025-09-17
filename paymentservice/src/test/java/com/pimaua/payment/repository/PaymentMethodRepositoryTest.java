@@ -34,7 +34,7 @@ public class PaymentMethodRepositoryTest{
 
     @Test
     void saveAndFindPaymentMethod(){
-        //given
+        // Given create a PaymentMethod
         PaymentMethod paymentMethod= PaymentMethod.builder()
                 .userId(1)
                 .stripePaymentMethodId("123")
@@ -45,10 +45,10 @@ public class PaymentMethodRepositoryTest{
                 .createdAt(LocalDateTime.of(2025, 8, 1, 10, 30, 0))
                 .build();
 
-        //when
+        // When: save the PaymentMethod to the repository
         paymentMethodRepository.save(paymentMethod);
 
-        //then
+        // Then: retrieve it by userId and verify it exists
         Optional<PaymentMethod>foundPaymentMethod=paymentMethodRepository.findByUserId(1);
         assertTrue(foundPaymentMethod.isPresent());
         assertEquals(1,foundPaymentMethod.get().getUserId());

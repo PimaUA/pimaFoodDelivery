@@ -44,21 +44,21 @@ public class OrderRepositoryTest{
 
     @Test
     void testSaveAndFindOrderByStatus() {
-        // Step 1: Create and save a Restaurant
+        // given: a restaurant
         Restaurant restaurant = Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
                 .build();
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
 
-        //Step 2: Create and save a User
+        // and: a customer
         Customer customer = new Customer();
         customer.setUserId(2);
         customer.setName("John");
         customer.setPhoneNumber("123456");
         Customer savedCustomer = customerRepository.save(customer);
 
-        // Step 3: Create and save an Order
+        // and: an order linked to them
         Order order = Order.builder()
                 .userId(savedCustomer.getUserId())
                 .restaurantId(savedRestaurant.getId())
@@ -74,8 +74,9 @@ public class OrderRepositoryTest{
                 .build();
         orderRepository.save(order);
 
-        // Step 4: Find and assert the saved Order
+        // when: searching for the order by status
         Optional<Order> foundOrder = orderRepository.findByOrderStatus(OrderStatus.CONFIRMED);
+        // then: the order is found with the expected status
         assertTrue(foundOrder.isPresent());
         assertEquals(OrderStatus.CONFIRMED, foundOrder.get().getOrderStatus());
     }

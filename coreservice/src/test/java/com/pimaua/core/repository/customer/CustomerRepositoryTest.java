@@ -33,19 +33,21 @@ public class CustomerRepositoryTest{
 
     @Test
     void testSaveAndFindCustomer() {
+        // given: a new customer entity
         Customer customer = new Customer();
         customer.setUserId(2);
         customer.setName("John");
         customer.setPhoneNumber("123456");
 
+        // when: saving the customer
         Customer savedCustomer = customerRepository.save(customer);
 
-        // Test findByPhoneNumber
+        // then: customer can be found by phone number
         Optional<Customer> foundCustomer = customerRepository.findByPhoneNumber("123456");
         assertTrue(foundCustomer.isPresent());
         assertEquals("John", foundCustomer.get().getName());
 
-        // Test findByName
+        // then: customer can also be found by name
         Optional<Customer> foundByName = customerRepository.findByName("John");
         assertTrue(foundByName.isPresent());
         assertEquals("123456", foundByName.get().getPhoneNumber());

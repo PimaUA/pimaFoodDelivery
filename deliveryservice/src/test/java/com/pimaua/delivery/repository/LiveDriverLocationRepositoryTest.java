@@ -41,7 +41,7 @@ public class LiveDriverLocationRepositoryTest{
 
     @Test
     void saveAndFindLiveDeliveryLocation() {
-        // Create and save driver
+        // Given: create and save a Driver
         Driver driver = Driver.builder()
                 .userId(1)
                 .name("John")
@@ -52,7 +52,7 @@ public class LiveDriverLocationRepositoryTest{
                 .build();
         Driver savedDriver = driversRepository.save(driver);
 
-        // Create live driver location
+        // Given: create and save a LiveDriverLocation for the Driver
         LocalDateTime timestamp = LocalDateTime.now();
         LiveDriverLocationId locationId = new LiveDriverLocationId(savedDriver.getId(), timestamp);
 
@@ -64,8 +64,10 @@ public class LiveDriverLocationRepositoryTest{
                 .build();
         liveDriverLocationRepository.save(liveDriverLocation);
 
-        // Fetch and assert
+        // When: fetch LiveDriverLocation by Driver
         Optional<LiveDriverLocation> found = liveDriverLocationRepository.findByDriver(savedDriver);
+
+        // Then: verify it exists and has the expected values
         assertTrue(found.isPresent());
         assertEquals(savedDriver.getName(), found.get().getDriver().getName());
         assertEquals(50.4501, found.get().getLatitude(), 0.000001);

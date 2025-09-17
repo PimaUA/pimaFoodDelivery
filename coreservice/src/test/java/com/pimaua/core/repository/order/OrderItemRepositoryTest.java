@@ -56,7 +56,7 @@ public class OrderItemRepositoryTest{
 
     @Test
     void testSaveAndFindOrderItemByName() {
-        // Setup: Restaurant, Customer, Order
+        // given: a restaurant and customer
         Restaurant restaurant = restaurantRepository.save(Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
@@ -68,6 +68,7 @@ public class OrderItemRepositoryTest{
                 .phoneNumber("1234567")
                 .build());
 
+        // and: an order linked to that customer and restaurant
         Order order = orderRepository.save(Order.builder()
                 .userId(customer.getUserId())
                 .restaurantId(restaurant.getId())
@@ -82,7 +83,7 @@ public class OrderItemRepositoryTest{
                 .dropOffLongitude(BigDecimal.valueOf(50.1234))
                 .build());
 
-        // Setup: Menu & MenuItem
+        // and: a menu with a menu item
         Menu menu = menuRepository.save(Menu.builder()
                 .name("Lunch Menu")
                 .restaurant(restaurant)
@@ -95,7 +96,7 @@ public class OrderItemRepositoryTest{
                 .menu(menu)
                 .build());
 
-        // Save OrderItem
+        // when: saving an order item
         OrderItem orderItem = orderItemRepository.save(OrderItem.builder()
                 .name("Apple Juice")
                 .menuItemId(menuItem.getId())
@@ -105,7 +106,7 @@ public class OrderItemRepositoryTest{
                 .order(order)
                 .build());
 
-        // Verify findByName
+        // then: it can be found by name
         Optional<OrderItem> found = orderItemRepository.findByName("Apple Juice");
         assertTrue(found.isPresent());
         assertEquals("Apple Juice", found.get().getName());
@@ -114,7 +115,7 @@ public class OrderItemRepositoryTest{
 
     @Test
     void testFindByOrderId() {
-        // --- Setup Restaurant & Customer ---
+        // given: a restaurant and customer
         Restaurant restaurant = restaurantRepository.save(Restaurant.builder()
                 .name("Test Restaurant")
                 .address("Test Address")
@@ -126,7 +127,7 @@ public class OrderItemRepositoryTest{
                 .phoneNumber("7654321")
                 .build());
 
-        // --- Setup Order ---
+        // and: an order linked to them
         Order order = orderRepository.save(Order.builder()
                 .userId(customer.getUserId())
                 .restaurantId(restaurant.getId())
@@ -141,7 +142,7 @@ public class OrderItemRepositoryTest{
                 .dropOffLongitude(BigDecimal.valueOf(51.1234))
                 .build());
 
-        // --- Setup Menu & MenuItems ---
+        // and: a menu with multiple menu items
         Menu menu = menuRepository.save(Menu.builder()
                 .name("Dinner Menu")
                 .restaurant(restaurant)
@@ -168,7 +169,7 @@ public class OrderItemRepositoryTest{
                 .menu(menu)
                 .build());
 
-        // --- Setup OrderItems ---
+        // when: saving order items for that order
         orderItemRepository.save(OrderItem.builder()
                 .name("Burger")
                 .menuItemId(menuItem1.getId())
@@ -196,7 +197,7 @@ public class OrderItemRepositoryTest{
                 .order(order)
                 .build());
 
-        // --- Verify findByOrderId ---
+        // then: querying by order ID returns all order items
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
         assertEquals(3, items.size(), "There should be 3 order items");
 

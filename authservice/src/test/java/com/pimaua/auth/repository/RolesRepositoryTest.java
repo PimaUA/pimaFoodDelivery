@@ -33,13 +33,16 @@ public class RolesRepositoryTest{
 
     @Test
     void testSaveAndFindRoles() {
+        //given: a new role entity
       Roles role=Roles.builder()
               .roleName("ADMIN")
               .build();
 
+        // when: saving the role and searching by role name
         Roles savedRole = rolesRepository.save(role);
-
         Optional<Roles> foundRole = rolesRepository.findByRoleName("ADMIN");
+
+        // then: the role is found and has the expected name
         assertTrue(foundRole.isPresent());
         assertEquals("ADMIN", foundRole.get().getRoleName());
     }

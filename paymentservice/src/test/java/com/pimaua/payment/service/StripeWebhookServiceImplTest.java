@@ -50,27 +50,33 @@ class StripeWebhookServiceImplTest {
 
     @Test
     void handleStripeEvent_InvalidSignature_ReturnsBadRequest() {
+        // given: an invalid Stripe signature header
         String payload = "{}";
         String sigHeader = "invalid";
 
+        // when: webhook service handles the event
         ResponseEntity<String> response = webhookService.handleStripeEvent(payload, sigHeader);
 
+        // then: request is rejected with HTTP 400 Bad Request
         assertEquals(400, response.getStatusCodeValue());
     }
 
     @Test
     void handleStripeEvent_AlreadyProcessed_ReturnsOk() throws Exception {
+        // given: an incoming event with a known ID that was already processed
         Event event = mock(Event.class);
         when(event.getId()).thenReturn("evt_1");
         when(processedEventService.isProcessed("evt_1")).thenReturn(true);
 
-        // mock static Webhook.constructEvent
+        // and: Stripe Webhook.constructEvent is mocked to return this event
         try (MockedStatic<Webhook> webhookStatic = mockStatic(Webhook.class)) {
             webhookStatic.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
                     .thenReturn(event);
 
+            // when: webhook service handles the event
             ResponseEntity<String> response = webhookService.handleStripeEvent("payload", "sig");
 
+            // then: request succeeds with HTTP 200 OK but payment is not re-processed
             assertEquals(200, response.getStatusCodeValue());
             verify(processedEventService).isProcessed("evt_1");
         }
@@ -78,12 +84,14 @@ class StripeWebhookServiceImplTest {
 
     @Test
     void handleStripeEvent_SuccessPaymentIntent_CallsUpdatePayment() throws Exception {
+        // given: an unprocessed "payment_intent.succeeded" event with metadata
         Event event = mock(Event.class);
         PaymentIntent pi = mock(PaymentIntent.class);
 
         when(event.getType()).thenReturn("payment_intent.succeeded");
         when(event.getId()).thenReturn("evt_2");
 
+        // and: event contains a deserialized PaymentIntent with metadata and ID
         EventDataObjectDeserializer deserializer = mock(EventDataObjectDeserializer.class);
         when(event.getDataObjectDeserializer()).thenReturn(deserializer);
         when(deserializer.getObject()).thenReturn(Optional.of(pi));
@@ -93,12 +101,15 @@ class StripeWebhookServiceImplTest {
 
         when(processedEventService.isProcessed("evt_2")).thenReturn(false);
 
+        // and: Stripe Webhook.constructEvent is mocked to return this event
         try (MockedStatic<Webhook> webhookStatic = mockStatic(Webhook.class)) {
             webhookStatic.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
                     .thenReturn(event);
 
+            // when: webhook service handles the event
             ResponseEntity<String> response = webhookService.handleStripeEvent("payload", "sig");
 
+            // then: request succeeds with HTTP 200 OK, payment is updated, and event is marked processed
             assertEquals(200, response.getStatusCodeValue());
             verify(paymentService).updatePaymentStatusAndCreateOutbox("pi_12345", SUCCEEDED, 123);
             verify(processedEventService).markProcessed("evt_2");
@@ -107,6 +118,7 @@ class StripeWebhookServiceImplTest {
 
     @Test
     void handleStripeEvent_MissingOrderId_ThrowsException() throws Exception {
+        // given: an unprocessed "payment_intent.succeeded" event without order_id metadata
         Event event = mock(Event.class);
         PaymentIntent pi = mock(PaymentIntent.class);
         when(event.getType()).thenReturn("payment_intent.succeeded");
@@ -116,10 +128,12 @@ class StripeWebhookServiceImplTest {
         when(event.getDataObjectDeserializer().getObject()).thenReturn(Optional.of(pi));
         when(processedEventService.isProcessed("evt_3")).thenReturn(false);
 
+        // and: Stripe Webhook.constructEvent is mocked to return this event
         try (MockedStatic<Webhook> webhookStatic = mockStatic(Webhook.class)) {
             webhookStatic.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
                     .thenReturn(event);
 
+            // when & then: handling the event throws MissingMetaDataException
             assertThrows(MissingMetaDataException.class,
                     () -> webhookService.handleStripeEvent("payload", "sig"));
         }

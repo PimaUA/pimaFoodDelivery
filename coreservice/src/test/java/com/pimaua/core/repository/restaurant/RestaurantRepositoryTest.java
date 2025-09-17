@@ -33,15 +33,17 @@ public class RestaurantRepositoryTest{
 
     @Test
     void testSaveAndFindRestaurant() {
-        // Step 1: Create and save a Restaurant
+        // given: a restaurant to be saved
         Restaurant restaurant = Restaurant.builder()
                 .name("Some Restaurant")
                 .address("Some Address")
                 .build();
         restaurantRepository.save(restaurant);
 
-        // Step 2: Find and assert the saved Restaurant
+        // when: searching for the restaurant by name
         Optional<Restaurant> foundRestaurant = restaurantRepository.findByName("Some Restaurant");
+
+        // then: the restaurant is found and has the expected name
         assertTrue(foundRestaurant.isPresent());
         assertEquals("Some Restaurant", foundRestaurant.get().getName());
     }

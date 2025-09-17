@@ -40,6 +40,7 @@ public class DeliveryRepositoryTest{
 
     @Test
     void testSaveAndFindDelivery() {
+        // Given: create and save a Driver
         Driver driver = Driver.builder()
                 .userId(1)
                 .name("John")
@@ -51,6 +52,7 @@ public class DeliveryRepositoryTest{
 
         Driver savedDriver=driversRepository.save(driver);
 
+        // Given: create and save a Delivery linked to the Driver
         Delivery delivery = Delivery.builder()
                 .orderId(1)
                 .deliveryStatus(DeliveryStatus.DELIVERED)
@@ -62,7 +64,10 @@ public class DeliveryRepositoryTest{
                 .build();
         Delivery savedDelivery = deliveryRepository.save(delivery);
 
+        // When: retrieve the Delivery by orderId
         Optional<Delivery> foundDelivery = deliveryRepository.findByOrderId(1);
+
+        // Then: verify the Delivery was found and matches the saved data
         assertTrue(foundDelivery.isPresent());
         assertEquals(1, foundDelivery.get().getOrderId());
     }

@@ -12,6 +12,7 @@ import com.pimaua.core.mapper.order.OrderItemMapper;
 import com.pimaua.core.repository.order.OrderItemRepository;
 import com.pimaua.core.repository.order.OrderRepository;
 import com.pimaua.core.repository.restaurant.MenuItemRepository;
+import com.pimaua.core.service.order.testdata.OrderItemTestData;
 import com.pimaua.core.service.restaurant.MenuItemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -22,8 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -60,77 +59,28 @@ class OrderItemServiceTest {
 
     @BeforeEach
     void setUp() {
-        menuItem = MenuItem.builder()
-                .id(1)
-                .price(BigDecimal.valueOf(10.0))
-                .name("Menu Item")
-                .build();
-
-        order = spy(Order.builder()
-                .userId(1)
-                .restaurantId(2)
-                .orderStatus(OrderStatus.PENDING)
-                .totalPrice(BigDecimal.valueOf(20.0))
-                .createdAt(LocalDateTime.of(2025, 7, 30, 12, 0))
-                .pickupAddress("Some street")
-                .pickupLatitude(BigDecimal.valueOf(40.1234))
-                .pickupLongitude(BigDecimal.valueOf(40.1234))
-                .dropOffAddress("Another street")
-                .dropOffLatitude(BigDecimal.valueOf(50.1234))
-                .dropOffLongitude(BigDecimal.valueOf(50.1234))
-                .orderItems(new ArrayList<>())
-                .build());
-
-        existingOrderItem = OrderItem.builder()
-                .id(1)
-                .menuItemId(1)
-                .name("Menu Item")
-                .quantity(2)
-                .unitPrice(BigDecimal.valueOf(10.00))
-                .totalPrice(BigDecimal.valueOf(20.00))
-                .order(order)
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        OrderItem updatedOrderItem = OrderItem.builder()
-                .id(1)
-                .menuItemId(1)
-                .name("Updated Item")
-                .quantity(3)
-                .unitPrice(BigDecimal.valueOf(12.00))
-                .totalPrice(BigDecimal.valueOf(36.00))
-                .order(order)
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        orderItemRequestDto = OrderItemRequestDto.builder()
-                .menuItemId(1)
-                .quantity(2)
-                .build();
-
-        orderItemResponseDto = OrderItemResponseDto.builder()
-                .id(1)
-                .menuItemId(1)
-                .name("Menu Item")
-                .quantity(2)
-                .unitPrice(BigDecimal.valueOf(10.00))
-                .totalPrice(BigDecimal.valueOf(20.00))
-                .build();
+        menuItem = OrderItemTestData.mockMenuItem();
+        order = OrderItemTestData.mockOrder();
+        existingOrderItem = OrderItemTestData.mockOrderItem(order,menuItem);
+        orderItemRequestDto = OrderItemTestData.mockOrderItemRequestDto();
+        orderItemResponseDto = OrderItemTestData.mockOrderItemResponseDto();
     }
 
     @Test
     void addItemToExistingOrder_Success() {
-        // given
+        // Given: an existing order with ID 100 and a valid menu item
         when(orderRepository.findById(100)).thenReturn(Optional.of(order));
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
         when(orderItemMapper.toEntity(any(), any(), any(), any()))
                 .thenReturn(existingOrderItem);
         when(orderItemMapper.toDto(existingOrderItem))
                 .thenReturn(orderItemResponseDto);
-        // when
+
+        // When: adding the item to the existing order
         OrderItemResponseDto result =
                 orderItemService.addItemToExistingOrder(100, orderItemRequestDto);
-        // then
+
+        // Then: verify the response, order updates, and interactions
         assertNotNull(result);
         assertEquals(orderItemResponseDto, result);
         assertEquals(1, order.getOrderItems().size());
@@ -143,33 +93,45 @@ class OrderItemServiceTest {
 
     @Test
     void addItemToExistingOrder_OrderNotFound() {
+        // Given: no order exists with ID 123
         when(orderRepository.findById(123)).thenReturn(Optional.empty());
+
+        // When & Then: adding item throws OrderNotFoundException
         assertThrows(OrderNotFoundException.class,
                 () -> orderItemService.addItemToExistingOrder(123, orderItemRequestDto));
+
+        // Then: verify repository interaction and no mapper interactions
         verify(orderRepository).findById(123);
         verifyNoInteractions(orderItemMapper);
     }
 
     @Test
     void addItemToExistingOrder_OrderNotPending() {
+        // Given: an order that is not in PENDING status
         order.setOrderStatus(OrderStatus.DELIVERED);
+
+        // When & Then: adding item throws IllegalStateException
         when(orderRepository.findById(100)).thenReturn(Optional.of(order));
         assertThrows(IllegalStateException.class,
                 () -> orderItemService.addItemToExistingOrder(100, orderItemRequestDto));
+
+        // Then: verify repository interaction and no mapper interactions
         verify(orderRepository).findById(100);
         verifyNoInteractions(orderItemMapper);
     }
 
     @Test
     void findAll_Success() {
-        // Given
+        // Given: some existing order items and mapped DTOs
         List<OrderItem> orderItems = Arrays.asList(existingOrderItem);
         List<OrderItemResponseDto> expectedDtos = Arrays.asList(orderItemResponseDto);
         when(orderItemRepository.findAll()).thenReturn(orderItems);
         when(orderItemMapper.toListDto(orderItems)).thenReturn(expectedDtos);
-        // When
+
+        // When: fetching all order items
         List<OrderItemResponseDto> result = orderItemService.findAll();
-        // Then
+
+        // Then: verify returned list and interactions
         assertEquals(expectedDtos, result);
         assertEquals(1, result.size());
         verify(orderItemRepository).findAll();
@@ -178,12 +140,14 @@ class OrderItemServiceTest {
 
     @Test
     void findById_Success() {
-        // Given
+        // Given: an existing order item with ID 1
         when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
         when(orderItemMapper.toDto(existingOrderItem)).thenReturn(orderItemResponseDto);
-        // When
+
+        // When: fetching order item by ID
         OrderItemResponseDto result = orderItemService.findById(1);
-        // Then
+
+        // Then: verify the returned DTO and repository interaction
         assertEquals(orderItemResponseDto, result);
         verify(orderItemRepository).findById(1);
         verify(orderItemMapper).toDto(existingOrderItem);
@@ -191,28 +155,32 @@ class OrderItemServiceTest {
 
     @Test
     void findById_OrderItemNotFound() {
-        // Given
+        // Given: no order item exists for any ID
         when(orderItemRepository.findById(anyInt())).thenReturn(Optional.empty());
-        // When & Then
+
+        // When & Then: fetching throws OrderItemNotFoundException
         OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class,
                 () -> orderItemService.findById(999));
         assertEquals("OrderItem not found with ID 999", exception.getMessage());
 
+        // Then: verify repository interaction and no mapper interaction
         verify(orderItemRepository).findById(anyInt());
         verifyNoInteractions(orderItemMapper);
     }
 
     @Test
     void findByOrderId_Success() {
-        // Given
+        // Given: existing order items for a specific order ID
         int orderId = 100;
         List<OrderItem> orderItems = Arrays.asList(existingOrderItem);
         List<OrderItemResponseDto> expectedDtos = Arrays.asList(orderItemResponseDto);
         when(orderItemRepository.findByOrderId(orderId)).thenReturn(orderItems);
         when(orderItemMapper.toListDto(orderItems)).thenReturn(expectedDtos);
-        // When
+
+        // When: fetching items by order ID
         List<OrderItemResponseDto> result = orderItemService.findByOrderId(orderId);
-        // Then
+
+        // Then: verify the returned list and repository interaction
         assertNotNull(result);
         assertEquals(expectedDtos, result);
         assertEquals(1, result.size());
@@ -222,14 +190,15 @@ class OrderItemServiceTest {
 
     @Test
     void findByOrderId_OrderItemNotFound() {
-        // Given
+        // Given: no items exist for order ID 999
         int orderId = 999;
         when(orderItemRepository.findByOrderId(orderId)).thenReturn(List.of());
 
-        // When & Then
+        // When & Then: fetching throws OrderItemNotFoundException
         OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class,
                 () -> orderItemService.findByOrderId(orderId));
 
+        // Then: verify repository interaction and no mapper interaction
         assertEquals("No OrderItems found for order ID " + orderId, exception.getMessage());
         verify(orderItemRepository).findByOrderId(orderId);
         verifyNoInteractions(orderItemMapper);
@@ -237,7 +206,7 @@ class OrderItemServiceTest {
 
     @Test
     void update_Success() {
-        // given
+        // Given: an existing order item and menu item
         BigDecimal unitPrice = menuItem.getPrice();
         BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(orderItemRequestDto.getQuantity()));
         when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
@@ -246,11 +215,12 @@ class OrderItemServiceTest {
                 unitPrice, totalPrice);
         order.setOrderStatus(OrderStatus.PENDING);
         when(orderRepository.save(order)).thenReturn(order);
-
         when(orderItemMapper.toDto(existingOrderItem)).thenReturn(orderItemResponseDto);
-        // when
+
+        // When: updating the order item
         OrderItemResponseDto result = orderItemService.update(1, orderItemRequestDto);
-        // then
+
+        // Then: verify updated DTO and interactions
         assertEquals(orderItemResponseDto, result);
         verify(orderItemRepository).findById(1);
         verify(menuItemService).getMenuItemById(1);
@@ -262,12 +232,15 @@ class OrderItemServiceTest {
 
     @Test
     void update_OrderItemNotFound() {
-        // Given
+        // Given: no order item exists with ID 999
         when(orderItemRepository.findById(999)).thenReturn(Optional.empty());
-        // When & Then
+
+        // When & Then: updating throws OrderItemNotFoundException
         OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class,
                 () -> orderItemService.findById(999));
         assertEquals("OrderItem not found with ID 999", exception.getMessage());
+
+        // Then: verify repository interaction and no service or mapper interaction
         verify(orderItemRepository).findById(999);
         verifyNoInteractions(menuItemService);
         verifyNoInteractions(orderItemMapper);
@@ -275,17 +248,22 @@ class OrderItemServiceTest {
 
     @Test
     void update_OrderNotPending() {
+        // Given: order status is not PENDING
         existingOrderItem.getOrder().setOrderStatus(OrderStatus.DELIVERED);
         when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
+
+        // When & Then: updating throws IllegalStateException
         assertThrows(IllegalStateException.class,
                 () -> orderItemService.update(1, orderItemRequestDto));
+
+        // Then: verify repository interaction only
         verify(orderItemRepository).findById(1);
         verifyNoInteractions(orderItemMapper);
     }
 
     @Test
     void delete_Success() {
-        // Given
+        // Given: order with one item and recalculated total
         order.getOrderItems().add(existingOrderItem);
         existingOrderItem.setOrder(order);
         BigDecimal recalculatedTotal = BigDecimal.valueOf(15.00);
@@ -293,9 +271,11 @@ class OrderItemServiceTest {
         when(order.calculateTotalPrice()).thenReturn(recalculatedTotal);
         order.setOrderStatus(OrderStatus.PENDING);
         when(orderRepository.save(order)).thenReturn(order);
-        // When
+
+        // When: deleting the order item
         orderItemService.delete(1);
-        // Then
+
+        // Then: verify removal, total price update, and repository calls
         verify(orderItemRepository).findById(1);
         assertFalse(order.getOrderItems().contains(existingOrderItem)); // ensure removed
         verify(order).setTotalPrice(recalculatedTotal);
@@ -304,38 +284,47 @@ class OrderItemServiceTest {
 
     @Test
     void delete_OrderItemNotFound() {
-        // Given
+        // Given: no order item exists with ID 999
         when(orderItemRepository.findById(999)).thenReturn(Optional.empty());
-        // When & Then
+
+        // When & Then: deleting throws OrderItemNotFoundException
         OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class,
                 () -> orderItemService.findById(999));
         assertEquals("OrderItem not found with ID 999", exception.getMessage());
+
+        // Then: verify repository interaction only
         verify(orderItemRepository).findById(999);
         verifyNoInteractions(orderRepository);
     }
 
     @Test
     void delete_OrderNotPending() {
+        // Given: order has an item but status is not PENDING
         order.getOrderItems().add(existingOrderItem);
         existingOrderItem.setOrder(order);
         order.setOrderStatus(OrderStatus.DELIVERED);
-        when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
 
+        // When & Then: deleting throws IllegalStateException
+        when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
         assertThrows(IllegalStateException.class, () -> orderItemService.delete(1));
+
+        // Then: verify repository interaction only
         verify(orderItemRepository).findById(1);
         verifyNoInteractions(orderRepository);
     }
 
     @Test
     void testBuildOrderItem() {
-        // Given
+        // Given: a menu item and mapper behavior
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
         when(orderItemMapper.toEntity(any(OrderItemRequestDto.class), eq(menuItem),
                 eq(BigDecimal.valueOf(10.00)), eq(BigDecimal.valueOf(20.00))))
                 .thenReturn(existingOrderItem);
-        // When
+
+        // When: building order item from request DTO
         OrderItem result = orderItemService.buildOrderItemForOrder(orderItemRequestDto);
-        // Then
+
+        // Then: verify returned entity and interactions
         assertThat(result).isEqualTo(existingOrderItem);
         verify(menuItemService).getMenuItemById(1);
         verify(orderItemMapper).toEntity(orderItemRequestDto, menuItem,
@@ -344,15 +333,20 @@ class OrderItemServiceTest {
 
     @Test
     void buildOrderItemForOrder_InvalidQuantity() {
+        // Given: invalid quantity in request
         orderItemRequestDto.setQuantity(0);
+
+        // When & Then: building order item throws IllegalArgumentException
         assertThrows(IllegalArgumentException.class,
                 () -> orderItemService.buildOrderItemForOrder(orderItemRequestDto));
+
+        // Then: mapper should not be called
         verifyNoInteractions(orderItemMapper);
     }
 
     @Test
     void calculateTotalPrice_Success() {
-// Given
+        // Given: a menu item and multiple quantities to test
         when(menuItemService.getMenuItemById(1)).thenReturn(menuItem);
         int[] quantities = {1, 3, 5};
         for (int quantity : quantities) {
@@ -367,13 +361,17 @@ class OrderItemServiceTest {
             when(orderItemMapper.toEntity(eq(orderItemRequestDto), eq(menuItem),
                     eq(menuItem.getPrice()), eq(expectedTotal)))
                     .thenReturn(expectedOrderItem);
-            // When
+
+            // When: building order item
             OrderItem result = orderItemService.buildOrderItemForOrder(orderItemRequestDto);
-            // Then
+
+            // Then: verify total price, unit price, and quantity
             assertThat(result.getTotalPrice()).isEqualByComparingTo(expectedTotal);
             assertThat(result.getUnitPrice()).isEqualByComparingTo(menuItem.getPrice());
             assertThat(result.getQuantity()).isEqualTo(quantity);
         }
+
+        // Then: menuItemService called correct number of times
         verify(menuItemService, times(quantities.length)).getMenuItemById(1);
     }
 }
