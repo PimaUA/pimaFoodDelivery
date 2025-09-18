@@ -263,22 +263,23 @@ class OrderItemServiceTest {
 
     @Test
     void delete_Success() {
-        // Given: order with one item and recalculated total
+        // Given: order with one item
         order.getOrderItems().add(existingOrderItem);
         existingOrderItem.setOrder(order);
-        BigDecimal recalculatedTotal = BigDecimal.valueOf(15.00);
-        when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
-        when(order.calculateTotalPrice()).thenReturn(recalculatedTotal);
         order.setOrderStatus(OrderStatus.PENDING);
+
+        when(orderItemRepository.findById(1)).thenReturn(Optional.of(existingOrderItem));
         when(orderRepository.save(order)).thenReturn(order);
+
+        BigDecimal expectedTotal = order.calculateTotalPrice(); // calculate using real logic
 
         // When: deleting the order item
         orderItemService.delete(1);
 
-        // Then: verify removal, total price update, and repository calls
+        // Then: verify removal and repository calls
         verify(orderItemRepository).findById(1);
         assertFalse(order.getOrderItems().contains(existingOrderItem)); // ensure removed
-        verify(order).setTotalPrice(recalculatedTotal);
+        assertEquals(0, order.getTotalPrice().compareTo(BigDecimal.ZERO));
         verify(orderRepository).save(order);
     }
 

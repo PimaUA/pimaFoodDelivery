@@ -69,7 +69,7 @@ class OrderServiceTest {
     void create_Success() {
         // Given: a valid restaurant exists and order items can be built
         when(restaurantRepository.existsById(200)).thenReturn(true);
-        when(orderItemService.buildOrderItemForOrder(orderItemRequestDto)).thenReturn(orderItem);
+        when(orderItemService.buildOrderItemForOrder(any(OrderItemRequestDto.class))).thenReturn(orderItem);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponseDto);
 
