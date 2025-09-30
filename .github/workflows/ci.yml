@@ -43,7 +43,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and Push Docker Images
+      - name: Build and Push Multi-Arch Docker Images
         if: github.event_name == 'push'
         run: |
           for service in ${SERVICES//,/ }; do
@@ -51,8 +51,10 @@ jobs:
             if [[ -f "$dockerfile" ]]; then
               IMAGE=${{ env.DOCKER_IMAGE_REPO }}/$service:latest
               echo "Building and pushing $IMAGE"
-              docker build -t "$IMAGE" "./$service"
-              docker push "$IMAGE"
+              docker buildx build \
+              --platform linux/amd64,linux/arm64 \
+              -t "$IMAGE" "./$service" \
+              --push
             else
               echo "No Dockerfile for $service, skipping..."
             fi
