@@ -46,14 +46,16 @@ jobs:
       - name: Build and Push Multi-Arch Docker Images
         if: github.event_name == 'push'
         run: |
+          COMMIT_SHA=${GITHUB_SHA::7}
           for service in ${SERVICES//,/ }; do
             dockerfile="./$service/Dockerfile"
             if [[ -f "$dockerfile" ]]; then
-              IMAGE=${{ env.DOCKER_IMAGE_REPO }}/$service:latest
+              IMAGE=${{ env.DOCKER_IMAGE_REPO }}/$service
               echo "Building and pushing $IMAGE"
               docker buildx build \
               --platform linux/amd64,linux/arm64 \
-              -t "$IMAGE" "./$service" \
+              -t "$IMAGE:$COMMIT_SHA" \
+              "./$service" \
               --push
             else
               echo "No Dockerfile for $service, skipping..."
