@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coreservice-deployment
+  labels:
+    app: coreservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coreservice
+  template:
+    metadata:
+      labels:
+        app: coreservice
+    spec:
+      containers:
+        - name: coreservice
+          image: pimaua/coreservice:bc3028e
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_APPLICATION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: pimaua-configmap
+                  key: CORE_SERVICE_APPLICATION_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coreservice
+spec:
+  selector:
+    app: coreservice
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8081
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: coreservice-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - host: core.pimapi.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: coreservice
+                port:
+                  number: 80

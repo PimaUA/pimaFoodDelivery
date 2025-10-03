@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pimaua-configmap
+data:
+  AUTH_SERVICE_APPLICATION_NAME: "authservice"
+  CORE_SERVICE_APPLICATION_NAME: "coreservice"
+  DELIVERY_SERVICE_APPLICATION_NAME: "deliveryservice"
+  PAYMENT_SERVICE_APPLICATION_NAME: "paymentservice"
